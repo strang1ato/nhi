@@ -1,0 +1,6 @@
+main
+test.db
+test.log
+*.orig
+*.so
+*.swp
