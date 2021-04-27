@@ -3,8 +3,8 @@ package cmd
 import (
 	"errors"
 
-	"github.com/strang1ato/nhi/pkg/log"
 	"github.com/alecthomas/kong"
+	"github.com/strang1ato/nhi/pkg/log"
 )
 
 // Declare cli variable used by kong
