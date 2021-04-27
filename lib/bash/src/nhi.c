@@ -52,6 +52,7 @@ __attribute__((constructor)) void init()
    */
   if (is_bash) {
     sprintf(table_name, "%ld", time(NULL));
+    setup_queries(table_name);
     create_table(db, table_name);
     create_row(db, table_name);
   }

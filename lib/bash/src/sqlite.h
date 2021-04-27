@@ -3,6 +3,8 @@
 
 sqlite3 *open_db();
 
+void setup_queries(const char *);
+
 void create_table(sqlite3 *, const char *);
 
 void create_row(sqlite3 *, const char *);
