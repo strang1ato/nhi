@@ -52,6 +52,9 @@ func Log(tableName string) error {
 	for rows.Next() {
 		rows.Scan(&indicator, &command)
 
+		if command == "" {
+			continue
+		}
 		content.WriteString("\x1b[33m" + "Indicator: " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
 		content.WriteString("\n    " + command + "\n\n")
 	}
