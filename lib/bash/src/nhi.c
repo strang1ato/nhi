@@ -80,7 +80,7 @@ int open(const char *pathname, int flags, mode_t mode)
 {
   int (*original_open)() = (int (*)())dlsym(RTLD_NEXT, "open");
   int result = original_open(pathname, flags, mode);
-  if (is_bash && flags == 0 && mode == 0666) {
+  if (is_bash && flags == 1025 && mode == 0600) {
     bash_history_fd = result;
   }
   return result;
