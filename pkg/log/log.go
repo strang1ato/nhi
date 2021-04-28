@@ -40,23 +40,26 @@ func Log(tableName string) error {
 		return nil
 	}
 
-	query := "SELECT indicator, command FROM `" + tableName + "` ORDER BY rowid DESC"
+	query := "SELECT indicator, start_time, finish_time, command FROM `" + tableName + "` ORDER BY rowid DESC"
 	rows, err := db.Query(query)
 	if err != nil {
 		return err
 	}
 
 	var indicator int
-	var command string
+	var startTime, finishTime,
+		command string
 	var content strings.Builder
 	for rows.Next() {
-		rows.Scan(&indicator, &command)
+		rows.Scan(&indicator, &startTime, &finishTime, &command)
 
 		if command == "" {
 			continue
 		}
-		content.WriteString("\x1b[33m" + "Indicator: " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
-		content.WriteString("\n    " + command + "\n\n")
+		content.WriteString("\x1b[33m" + "indicator " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
+		content.WriteString("Start time:  " + startTime + "\n")
+		content.WriteString("Finish time: " + finishTime + "\n")
+		content.WriteString("\n    " + command + "\n")
 	}
 
 	fp, err := setupMemoryFile(content.String())
