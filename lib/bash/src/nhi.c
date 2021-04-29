@@ -104,54 +104,59 @@ ssize_t write(int filedes, const void *buffer, size_t size)
 
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
+  pid_t tracer_pid = -1;  /* Set tracer_pid to any value but not zero */
   if (is_terminal_setup) {
     add_start_time(db, table_name);
-  }
-  if (is_terminal_setup && !fork()) {
-    pid_t tracee_pid = getppid();
-    int wstatus;
-    int one_time = false;
-    ptrace(PTRACE_ATTACH, tracee_pid, NULL, NULL);
-    while(1) {
-      waitpid(tracee_pid, &wstatus, 0);
 
-      /*
-       * Quick solution for receiving the same syscall 2 times in a row
-       * When I have more free time I will try to figure it out and fix it in more elegant way.
-       */
-      if (!one_time) {
-        one_time = true;
-      } else {
-        one_time = false;
+    tracer_pid = fork();
+    if (!tracer_pid) {
+      pid_t tracee_pid = getppid();
+      int wstatus;
+      int one_time = false;
+      ptrace(PTRACE_ATTACH, tracee_pid, NULL, NULL);
+      while(1) {
+        waitpid(tracee_pid, &wstatus, 0);
+
+        /*
+         * Quick solution for receiving the same syscall 2 times in a row
+         * When I have more free time I will try to figure it out and fix it in more elegant way.
+         */
+        if (!one_time) {
+          one_time = true;
+        } else {
+          one_time = false;
+          ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
+          continue;
+        }
+
+        if (wstatus == -1) {
+          exit(EXIT_FAILURE);
+        }
+        if (WIFEXITED(wstatus)) {
+          exit(EXIT_SUCCESS);
+        }
+
+        struct user_regs_struct regs;
+        ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
+        if(regs.orig_rax == SYS_write && (regs.rdi == 1 || regs.rdi == 2)) {
+          struct iovec local[1];
+          local[0].iov_base = calloc(regs.rdx, sizeof(char));
+          local[0].iov_len = regs.rdx;
+
+          struct iovec remote[1];
+          remote[0].iov_base = (void *)regs.rsi;
+          remote[0].iov_len = regs.rdx;
+
+          process_vm_readv(tracee_pid, local, 1, remote, 1, 0);
+          add_output(db, table_name, local[0].iov_base);
+        }
+
         ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
-        continue;
       }
-
-      if (wstatus == -1) {
-        exit(EXIT_FAILURE);
-      }
-      if (WIFEXITED(wstatus)) {
-        exit(EXIT_SUCCESS);
-      }
-
-      struct user_regs_struct regs;
-      ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
-      if(regs.orig_rax == SYS_write && (regs.rdi == 1 || regs.rdi == 2)) {
-        struct iovec local[1];
-        local[0].iov_base = calloc(regs.rdx, sizeof(char));
-        local[0].iov_len = regs.rdx;
-
-        struct iovec remote[1];
-        remote[0].iov_base = (void *)regs.rsi;
-        remote[0].iov_len = regs.rdx;
-
-        process_vm_readv(tracee_pid, local, 1, remote, 1, 0);
-        add_output(db, table_name, local[0].iov_base);
-      }
-
-      ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
     }
-  } else {
+  }
+
+  if (tracer_pid) {
     int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
     int status = original_execve(pathname, argv, envp);
     return status;
