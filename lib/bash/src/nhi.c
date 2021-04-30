@@ -2,11 +2,13 @@
 
 #include <time.h>
 #include <dlfcn.h>
+#include <semaphore.h>
 #include <sqlite3.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/mman.h>
 #include <sys/ptrace.h>
 #include <sys/syscall.h>
 #include <sys/uio.h>
@@ -104,9 +106,14 @@ ssize_t write(int filedes, const void *buffer, size_t size)
 
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
+  sem_t *sem;
+
   pid_t tracer_pid = -1;  /* Set tracer_pid to any value but not zero */
   if (is_terminal_setup) {
     add_start_time(db, table_name);
+
+    sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+    sem_init(sem, 1, 0);
 
     tracer_pid = fork();
     if (!tracer_pid) {
@@ -114,6 +121,9 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
       int wstatus;
       int one_time = false;
       ptrace(PTRACE_ATTACH, tracee_pid, NULL, NULL);
+
+      sem_post(sem);
+
       while(1) {
         waitpid(tracee_pid, &wstatus, 0);
 
@@ -157,6 +167,12 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
   }
 
   if (tracer_pid) {
+    if (is_terminal_setup) {
+      sem_wait(sem);
+      sem_destroy(sem);
+      munmap(sem, sizeof(sem_t));
+    }
+
     int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
     int status = original_execve(pathname, argv, envp);
     return status;
