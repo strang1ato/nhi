@@ -1,13 +1,14 @@
 package main
 
 import (
-	"log"
+	"fmt"
+	"os"
 
 	"github.com/strang1ato/nhi/cmd"
 )
 
 func main() {
 	if err := cmd.Run(); err != nil {
-		log.Panicln(err)
+		fmt.Fprintln(os.Stderr, err)
 	}
 }

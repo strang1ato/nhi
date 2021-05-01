@@ -1,6 +1,7 @@
 package log
 
 import (
+	"errors"
 	"strconv"
 	"strings"
 
@@ -21,9 +22,9 @@ func Log(tableName string) error {
 			return err
 		}
 
-		var tableName string
 		var content strings.Builder
 		for rows.Next() {
+			var tableName string
 			rows.Scan(&tableName)
 
 			content.WriteString(tableName + "\n")
@@ -43,14 +44,17 @@ func Log(tableName string) error {
 	query := "SELECT indicator, start_time, finish_time, command FROM `" + tableName + "` ORDER BY rowid DESC"
 	rows, err := db.Query(query)
 	if err != nil {
+		if err.Error() == "no such table: "+tableName {
+			return errors.New("no such shell session: " + tableName)
+		}
 		return err
 	}
 
-	var indicator int
-	var startTime, finishTime,
-		command string
 	var content strings.Builder
 	for rows.Next() {
+		var indicator int
+		var startTime, finishTime,
+			command string
 		rows.Scan(&indicator, &startTime, &finishTime, &command)
 
 		if command == "" {
