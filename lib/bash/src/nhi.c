@@ -68,6 +68,10 @@ __attribute__((destructor)) void destroy()
   sqlite3_close(db);
 }
 
+/*
+ * fwrite sets is_terminal_setup if is_bash and runs original shared library call.
+ * It looks like fwrite in bash is used first time for writing prompt. At this point terminal is set up.
+ */
 size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream)
 {
   size_t (*original_fwrite)() = (size_t (*)())dlsym(RTLD_NEXT, "fwrite");
@@ -78,6 +82,10 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   return result;
 }
 
+/*
+ * open sets bash_history_fd if certain conditions are met and runs original shared library call.
+ * bash_history_fd is set if open is used to open .bash_history file right after command execution.
+ */
 int open(const char *pathname, int flags, mode_t mode)
 {
   int (*original_open)() = (int (*)())dlsym(RTLD_NEXT, "open");
@@ -88,6 +96,10 @@ int open(const char *pathname, int flags, mode_t mode)
   return result;
 }
 
+/*
+ * write adds proper fields and new row to db if certain conditions are met and runs original shared library call.
+ * Proper fields to db are added if write is used to update .bash_history file right after command execution.
+ */
 ssize_t write(int filedes, const void *buffer, size_t size)
 {
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
@@ -104,6 +116,10 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   return status;
 }
 
+/*
+ * execve attaches tracer and runs original shared library call.
+ * execve is used by bash to execute program(s) defined in command.
+ */
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
   sem_t *sem;
