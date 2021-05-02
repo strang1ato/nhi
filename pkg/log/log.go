@@ -17,7 +17,7 @@ func Log(tableName string) error {
 
 	// If tableName is not specified show list of all tables
 	if tableName == "" {
-		rows, err := db.Query("SELECT name FROM sqlite_schema WHERE type='table'")
+		rows, err := db.Query("SELECT name FROM sqlite_schema WHERE type='table';")
 		if err != nil {
 			return err
 		}
@@ -41,7 +41,7 @@ func Log(tableName string) error {
 		return nil
 	}
 
-	query := "SELECT indicator, start_time, finish_time, command FROM `" + tableName + "` ORDER BY rowid DESC"
+	query := "SELECT indicator, start_time, finish_time, command FROM `" + tableName + "` ORDER BY rowid DESC;"
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+tableName {
