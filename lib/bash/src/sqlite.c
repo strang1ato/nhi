@@ -50,7 +50,7 @@ int write_error_to_log_file(char *message)
 }
 
 /*
- * write_error_to_log_file writes given error message to log file
+ * get_date returns date with current time
  */
 char *get_date()
 {
