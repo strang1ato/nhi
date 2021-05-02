@@ -16,7 +16,7 @@ var cli struct {
 
 	Fetch struct {
 		TableName string `arg required name:"session-name"`
-		Range     string `arg optional name:"start:end"`
+		StartEndRange     string `arg optional name:"start:end"`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 }
 
@@ -38,7 +38,7 @@ func Run() error {
 			return err
 		}
 	case "fetch <session-name> <start:end>":
-		if err := fetch.Fetch(cli.Fetch.TableName, cli.Fetch.Range); err != nil {
+		if err := fetch.Fetch(cli.Fetch.TableName, cli.Fetch.StartEndRange); err != nil {
 			return err
 		}
 	default:
