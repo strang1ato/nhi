@@ -45,14 +45,13 @@ void set_is_bash()
  */
 __attribute__((constructor)) void init()
 {
-  db = open_db();
-
   set_is_bash();
   /*
-   * if process is bash set table_name to time since epoch in seconds and
+   * if process is bash open db, set table_name to time since epoch in seconds and
    * create new table with table_name with one row
    */
   if (is_bash) {
+    db = open_db();
     sprintf(table_name, "%ld", time(NULL));
     setup_queries(table_name);
     create_table(db, table_name);
@@ -126,13 +125,14 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
 
   pid_t tracer_pid = -1;  /* Set tracer_pid to any value but not zero */
   if (is_terminal_setup) {
-    add_start_time(db, table_name);
-
     sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
 
     tracer_pid = fork();
     if (!tracer_pid) {
+      db = open_db();
+      add_start_time(db, table_name);
+
       pid_t tracee_pid = getppid();
       int wstatus;
       int one_time = false;
