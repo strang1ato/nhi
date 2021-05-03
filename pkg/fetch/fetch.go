@@ -25,11 +25,12 @@ func Fetch(tableName, startEndRange string) error {
 
 		startEndRange := strings.SplitN(startEndRange, ":", 2)
 
+		billion := 1000000000
 		if startEndRange[0] == "" {
-			startEndRange[0] = "1"
+			startEndRange[0] = "0"
 		}
 		if startEndRange[1] == "" {
-			startEndRange[1] = "-1"
+			startEndRange[1] = strconv.Itoa(billion - 1)
 		}
 
 		intStartRange, err := strconv.Atoi(startEndRange[0])
@@ -41,38 +42,37 @@ func Fetch(tableName, startEndRange string) error {
 			return errors.New("End range is not a number")
 		}
 
-		billion := 1000000000
 		if intStartRange < billion && intEndRange < billion {
 			if intStartRange < 0 && intEndRange < 0 {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE rowid >= (SELECT max(rowid)+%s+1 FROM `%s`) AND rowid <= (SELECT max(rowid)+%s+1 FROM `%s`);",
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 					tableName, startEndRange[0], tableName, startEndRange[1], tableName)
 			} else if intStartRange < 0 {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE rowid >= (SELECT max(rowid)+%s+1 FROM `%s`) AND rowid <= %s;",
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
 					tableName, startEndRange[0], tableName, startEndRange[1])
 			} else if intEndRange < 0 {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE rowid >= %s AND rowid <= (SELECT max(rowid)+%s+1 FROM `%s`);",
+					"WHERE rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 					tableName, startEndRange[0], startEndRange[1], tableName)
 			} else {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE rowid >= %s AND rowid <= %s;",
+					"WHERE rowid > %s AND rowid <= %s;",
 					tableName, startEndRange[0], startEndRange[1])
 			}
 		} else if intStartRange < billion {
 			if intStartRange < 0 {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE rowid >= (SELECT max(rowid)+%s+1 FROM `%s`) AND indicator <= %s;",
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
 					tableName, startEndRange[0], tableName, startEndRange[1])
 			} else {
-				query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE rowid >= %s AND indicator <= %s;",
+				query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
 					tableName, startEndRange[0], startEndRange[1])
 			}
 		} else if intEndRange < billion {
 			if intEndRange < 0 {
 				query = fmt.Sprintf("SELECT command, output FROM `%s`"+
-					"WHERE indicator >= %s AND rowid <= (SELECT max(rowid)+%s+1 FROM `%s`);",
+					"WHERE indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 					tableName, startEndRange[0], startEndRange[1], tableName)
 			} else {
 				query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",

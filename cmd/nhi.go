@@ -15,8 +15,8 @@ var cli struct {
 	} `cmd help:"Show command logs"`
 
 	Fetch struct {
-		TableName string `arg required name:"session-name"`
-		StartEndRange     string `arg optional name:"start:end"`
+		TableName     string `arg required name:"session-name"`
+		StartEndRange string `arg optional name:"start:end"`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 }
 
