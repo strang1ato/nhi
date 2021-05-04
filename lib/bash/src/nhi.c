@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <semaphore.h>
 #include <sqlite3.h>
+#include <stdarg.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -104,13 +105,92 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
   ssize_t status = original_write(filedes, buffer, size);
   if (is_bash && filedes == bash_history_fd) {
-    add_command(db, table_name, buffer, size);
+    add_command(db, table_name, buffer, size-1);
     add_finish_time(db, table_name);
     add_indicator(db, table_name);
 
     create_row(db, table_name);
 
     bash_history_fd = 0;
+  }
+  return status;
+}
+
+/*
+ * __printf_chk adds start time and output to latest.
+ * __printf_chk function is used in bulitins, for example by echo or dirs
+ */
+int __printf_chk(int flag, const char *restrict format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  int result = __vprintf_chk(flag, format, args);
+  va_end(args);
+
+  if (is_bash) {
+    add_start_time(db, table_name);
+    va_start(args, format);
+    char output[result];
+    vsprintf(output, format, args);
+    va_end(args);
+    add_output(db, table_name, output);
+  }
+  return result;
+}
+
+/*
+ * __fprintf_chk adds start time and output to latest row.
+ * __fprintf_chk function is used in bulitins, for example by times
+ */
+int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
+{
+  va_list args;
+  va_start(args, format);
+  int result = __vfprintf_chk(stream, flag, format, args);
+  va_end(args);
+
+  int fd = fileno(stream);
+  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO)) {
+    add_start_time(db, table_name);
+    va_start(args, format);
+    char output[result];
+    vsprintf(output, format, args);
+    va_end(args);
+    add_output(db, table_name, output);
+  }
+  return result;
+}
+
+/*
+ * putc adds start time and output to latest row.
+ * putc function is used in bulitins, for example by printf
+ */
+int putc(int c, FILE *stream)
+{
+  int (*original_putc)() = (int (*)())dlsym(RTLD_NEXT, "putc");
+  int result = original_putc(c, stream);
+
+  int fd = fileno(stream);
+  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO)) {
+    add_start_time(db, table_name);
+    char *s = (char *)(&c);
+    add_output(db, table_name, s);
+  }
+  return result;
+}
+
+/*
+ * puts adds output to latest row.
+ * puts function is used in bulitins, for example by pwd
+ */
+int puts(const char *s)
+{
+  int (*original_puts)() = (int (*)())dlsym(RTLD_NEXT, "puts");
+  int status = original_puts(s);
+
+  if (is_bash) {
+    add_start_time(db, table_name);
+    add_output(db, table_name, s);
   }
   return status;
 }
