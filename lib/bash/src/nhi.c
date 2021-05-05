@@ -19,8 +19,12 @@
 
 sqlite3 *db;
 char table_name[11];
+
 bool is_bash, is_terminal_setup;
+
 int bash_history_fd;
+
+bool completion;
 
 /*
  * set_is_bash checks if current process is bash and
@@ -116,6 +120,28 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   return status;
 }
 
+size_t strlen(const char *s)
+{
+  size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
+  size_t result = original_strlen(s);
+
+  if (is_bash && !strcmp(s, "COMP_LINE")) {
+    completion = true;
+  }
+  return result;
+}
+
+ssize_t read(int fd, void *buf, size_t count)
+{
+  ssize_t (*original_read)() = (ssize_t (*)())dlsym(RTLD_NEXT, "read");
+  ssize_t result = original_read(fd, buf, count);
+
+  if (is_bash && fd == 0 && strcmp(buf, "\t")) {
+    completion = false;
+  }
+  return result;
+}
+
 /*
  * __printf_chk adds start time and output to latest.
  * __printf_chk function is used in bulitins, for example by echo or dirs
@@ -127,7 +153,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
   int result = __vprintf_chk(flag, format, args);
   va_end(args);
 
-  if (is_bash) {
+  if (is_bash && !completion) {
     add_start_time(db, table_name);
     va_start(args, format);
     char output[result];
@@ -171,7 +197,7 @@ int putc(int c, FILE *stream)
   int result = original_putc(c, stream);
 
   int fd = fileno(stream);
-  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO)) {
+  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO) && !completion) {
     add_start_time(db, table_name);
     char *s = (char *)(&c);
     add_output(db, table_name, s);
