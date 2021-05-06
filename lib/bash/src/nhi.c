@@ -1,6 +1,6 @@
 #include "sqlite.h"
 
-#include <time.h>
+#include <ctype.h>
 #include <dlfcn.h>
 #include <semaphore.h>
 #include <sqlite3.h>
@@ -15,6 +15,7 @@
 #include <sys/uio.h>
 #include <sys/user.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 sqlite3 *db;
@@ -24,7 +25,7 @@ bool is_bash, is_terminal_setup;
 
 int bash_history_fd;
 
-bool completion;
+bool completion, long_completion, after_completion;
 
 /*
  * set_is_bash checks if current process is bash and
@@ -82,6 +83,10 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   size_t result = original_fwrite(ptr, size, nitems, stream);
   if (is_bash) {
     is_terminal_setup = true;
+
+    if (size == 1 && nitems == 2 && !strcmp(ptr, "^C")) {
+      long_completion = false;
+    }
   }
   return result;
 }
@@ -136,8 +141,21 @@ ssize_t read(int fd, void *buf, size_t count)
   ssize_t (*original_read)() = (ssize_t (*)())dlsym(RTLD_NEXT, "read");
   ssize_t result = original_read(fd, buf, count);
 
-  if (is_bash && fd == 0 && strcmp(buf, "\t")) {
-    completion = false;
+  if (is_bash && fd == 0) {
+    char lower_buf = tolower(((char *)buf)[0]);
+    if (lower_buf != '\t') {
+      if (after_completion) {
+        long_completion = false;
+        after_completion = false;
+      }
+      completion = false;
+    }
+    if (long_completion && lower_buf == 'y') {
+      after_completion = true;
+    }
+    if (lower_buf == 'n') {
+      long_completion = false;
+    }
   }
   return result;
 }
@@ -153,8 +171,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
   int result = __vprintf_chk(flag, format, args);
   va_end(args);
 
-  if (is_bash && !completion) {
-    add_start_time(db, table_name);
+  if (is_bash && !completion && !long_completion) {
     va_start(args, format);
     char output[result];
     vsprintf(output, format, args);
@@ -177,7 +194,11 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 
   int fd = fileno(stream);
   if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO)) {
-    add_start_time(db, table_name);
+    if (!strcmp(format, "Display all %d possibilities? (y or n)")) {
+      long_completion = true;
+      return result;
+    }
+
     va_start(args, format);
     char output[result];
     vsprintf(output, format, args);
@@ -197,8 +218,7 @@ int putc(int c, FILE *stream)
   int result = original_putc(c, stream);
 
   int fd = fileno(stream);
-  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO) && !completion) {
-    add_start_time(db, table_name);
+  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
     add_output(db, table_name, s);
   }
@@ -215,7 +235,6 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash) {
-    add_start_time(db, table_name);
     add_output(db, table_name, s);
   }
   return status;
