@@ -25,7 +25,7 @@ bool is_bash, is_terminal_setup;
 
 int bash_history_fd;
 
-bool completion, long_completion, after_completion;
+bool completion, long_completion, after_question;
 
 /*
  * set_is_bash checks if current process is bash and
@@ -84,7 +84,8 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   if (is_bash) {
     is_terminal_setup = true;
 
-    if (size == 1 && nitems == 2 && !strcmp(ptr, "^C")) {
+    int fd = fileno(stream);
+    if (!strcmp(ptr, "^C") && size == 1 && nitems == 2 && fd == 2) {
       long_completion = false;
     }
   }
@@ -114,7 +115,7 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
   ssize_t status = original_write(filedes, buffer, size);
   if (is_bash && filedes == bash_history_fd) {
-    add_command(db, table_name, buffer, size-1);
+    add_command(db, table_name, buffer, size);
     add_finish_time(db, table_name);
     add_indicator(db, table_name);
 
@@ -130,7 +131,7 @@ size_t strlen(const char *s)
   size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
   size_t result = original_strlen(s);
 
-  if (is_bash && !strcmp(s, "COMP_LINE")) {
+  if (is_bash && !strcmp(s, "lead=${COMP_LINE:0:$COMP_POINT}")) {
     completion = true;
   }
   return result;
@@ -144,14 +145,14 @@ ssize_t read(int fd, void *buf, size_t count)
   if (is_bash && fd == 0) {
     char lower_buf = tolower(((char *)buf)[0]);
     if (lower_buf != '\t') {
-      if (after_completion) {
+      if (after_question) {
         long_completion = false;
-        after_completion = false;
+        after_question = false;
       }
       completion = false;
     }
     if (long_completion && lower_buf == 'y') {
-      after_completion = true;
+      after_question = true;
     }
     if (lower_buf == 'n') {
       long_completion = false;
@@ -161,8 +162,8 @@ ssize_t read(int fd, void *buf, size_t count)
 }
 
 /*
- * __printf_chk adds start time and output to latest.
  * __printf_chk function is used in bulitins, for example by echo or dirs
+ * __printf_chk is used also for printing possible completions
  */
 int __printf_chk(int flag, const char *restrict format, ...)
 {
@@ -182,8 +183,8 @@ int __printf_chk(int flag, const char *restrict format, ...)
 }
 
 /*
- * __fprintf_chk adds start time and output to latest row.
- * __fprintf_chk function is used in bulitins, for example by times
+ * __fprintf_chk function is used in bulitins, for example by times.
+ * __fprintf_chk is also used for displaying long completion question
  */
 int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 {
@@ -209,8 +210,8 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 }
 
 /*
- * putc adds start time and output to latest row.
- * putc function is used in bulitins, for example by printf
+ * putc function is used in bulitins, for example by printf.
+ * putc is also used for deleteing characters next to prompt
  */
 int putc(int c, FILE *stream)
 {
@@ -218,7 +219,7 @@ int putc(int c, FILE *stream)
   int result = original_putc(c, stream);
 
   int fd = fileno(stream);
-  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO) && !completion && !long_completion) {
+  if (is_bash && fd == STDOUT_FILENO && !completion && !long_completion) {
     char *s = (char *)(&c);
     add_output(db, table_name, s);
   }
@@ -226,7 +227,6 @@ int putc(int c, FILE *stream)
 }
 
 /*
- * puts adds output to latest row.
  * puts function is used in bulitins, for example by pwd
  */
 int puts(const char *s)
