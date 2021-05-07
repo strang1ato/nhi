@@ -84,8 +84,7 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   if (is_bash) {
     is_terminal_setup = true;
 
-    int fd = fileno(stream);
-    if (!strcmp(ptr, "^C") && size == 1 && nitems == 2 && fd == 2) {
+    if (!strcmp(ptr, "^C") && size == 1 && nitems == 2 && stream == stderr) {
       long_completion = false;
     }
   }
@@ -126,6 +125,10 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   return status;
 }
 
+/*
+ * if is_bash and "lead=${COMP_LINE:0:$COMP_POINT}" is provided as arg
+ * we can be sure that completion is printing
+ */
 size_t strlen(const char *s)
 {
   size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
@@ -137,12 +140,15 @@ size_t strlen(const char *s)
   return result;
 }
 
+/*
+ * if buf is read from stdin and certain conditions are met change values of variables
+ */
 ssize_t read(int fd, void *buf, size_t count)
 {
   ssize_t (*original_read)() = (ssize_t (*)())dlsym(RTLD_NEXT, "read");
   ssize_t result = original_read(fd, buf, count);
 
-  if (is_bash && fd == 0) {
+  if (is_bash && fd == 0 && (completion || long_completion)) {
     char lower_buf = tolower(((char *)buf)[0]);
     if (lower_buf != '\t') {
       if (after_question) {
@@ -151,7 +157,7 @@ ssize_t read(int fd, void *buf, size_t count)
       }
       completion = false;
     }
-    if (long_completion && lower_buf == 'y') {
+    if (lower_buf == 'y') {
       after_question = true;
     }
     if (lower_buf == 'n') {
@@ -193,8 +199,7 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
   int result = __vfprintf_chk(stream, flag, format, args);
   va_end(args);
 
-  int fd = fileno(stream);
-  if (is_bash && (fd == STDOUT_FILENO || fd == STDERR_FILENO)) {
+  if (is_bash && (stream == stdout || stream == stderr)) {
     if (!strcmp(format, "Display all %d possibilities? (y or n)")) {
       long_completion = true;
       return result;
@@ -211,15 +216,14 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 
 /*
  * putc function is used in bulitins, for example by printf.
- * putc is also used for deleteing characters next to prompt
+ * putc is also used for deleting characters next to prompt
  */
 int putc(int c, FILE *stream)
 {
   int (*original_putc)() = (int (*)())dlsym(RTLD_NEXT, "putc");
   int result = original_putc(c, stream);
 
-  int fd = fileno(stream);
-  if (is_bash && fd == STDOUT_FILENO && !completion && !long_completion) {
+  if (is_bash && stream == stdout && !completion && !long_completion) {
     char *s = (char *)(&c);
     add_output(db, table_name, s);
   }
@@ -289,7 +293,7 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
 
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
-        if(regs.orig_rax == SYS_write && (regs.rdi == 1 || regs.rdi == 2)) {
+        if(regs.orig_rax == SYS_write && (regs.rdi == STDOUT_FILENO || regs.rdi == STDERR_FILENO)) {
           struct iovec local[1];
           local[0].iov_base = calloc(regs.rdx, sizeof(char));
           local[0].iov_len = regs.rdx;
