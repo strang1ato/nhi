@@ -178,7 +178,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
   int result = __vprintf_chk(flag, format, args);
   va_end(args);
 
-  if (is_bash && !completion && !long_completion) {
+  if (is_bash && !completion && !long_completion && isatty(STDOUT_FILENO)) {
     va_start(args, format);
     char output[result];
     vsprintf(output, format, args);
@@ -199,7 +199,7 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
   int result = __vfprintf_chk(stream, flag, format, args);
   va_end(args);
 
-  if (is_bash && (stream == stdout || stream == stderr)) {
+  if (is_bash && ((stream == stdout && isatty(STDOUT_FILENO)) || (stream == stderr && isatty(STDERR_FILENO)))) {
     if (!strcmp(format, "Display all %d possibilities? (y or n)")) {
       long_completion = true;
       return result;
@@ -223,7 +223,7 @@ int putc(int c, FILE *stream)
   int (*original_putc)() = (int (*)())dlsym(RTLD_NEXT, "putc");
   int result = original_putc(c, stream);
 
-  if (is_bash && stream == stdout && !completion && !long_completion) {
+  if (is_bash && stream == stdout && isatty(STDOUT_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
     add_output(db, table_name, s);
   }
@@ -238,7 +238,7 @@ int puts(const char *s)
   int (*original_puts)() = (int (*)())dlsym(RTLD_NEXT, "puts");
   int status = original_puts(s);
 
-  if (is_bash) {
+  if (is_bash && isatty(STDOUT_FILENO)) {
     add_output(db, table_name, s);
   }
   return status;
@@ -251,6 +251,18 @@ int puts(const char *s)
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
   sem_t *sem;
+
+  bool is_stdout_terminal, is_stderr_terminal;
+  if (isatty(STDOUT_FILENO)) {
+    is_stdout_terminal = true;
+  } else {
+    is_stdout_terminal = false;
+  }
+  if (isatty(STDERR_FILENO)) {
+    is_stderr_terminal = true;
+  } else {
+    is_stderr_terminal = false;
+  }
 
   pid_t tracer_pid = -1;  /* Set tracer_pid to any value but not zero */
   if (is_terminal_setup) {
@@ -293,7 +305,8 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
 
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
-        if(regs.orig_rax == SYS_write && (regs.rdi == STDOUT_FILENO || regs.rdi == STDERR_FILENO)) {
+        if(regs.orig_rax == SYS_write &&
+            ((regs.rdi == STDOUT_FILENO && is_stdout_terminal) || (regs.rdi == STDERR_FILENO && is_stderr_terminal))) {
           struct iovec local[1];
           local[0].iov_base = calloc(regs.rdx, sizeof(char));
           local[0].iov_len = regs.rdx;
