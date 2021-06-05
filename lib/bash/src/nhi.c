@@ -2,6 +2,7 @@
 
 #include <ctype.h>
 #include <dlfcn.h>
+#include <errno.h>
 #include <semaphore.h>
 #include <sqlite3.h>
 #include <stdarg.h>
@@ -51,17 +52,23 @@ void set_is_bash()
  */
 __attribute__((constructor)) void init()
 {
+  db = open_db();
+
   set_is_bash();
+
   /*
-   * if process is bash open db, set table_name to time since epoch in seconds and
-   * create new table with table_name with one row
+   * if process is bash set new table_name based on current time
    */
   if (is_bash) {
-    db = open_db();
     sprintf(table_name, "%ld", time(NULL));
     setup_queries(table_name);
     create_table(db, table_name);
     create_row(db, table_name);
+
+    setenv("NHI_LATEST_TABLE", table_name, 1);
+  } else {
+    sprintf(table_name, "%s", getenv("NHI_LATEST_TABLE"));
+    setup_queries(table_name);
   }
 }
 
@@ -245,38 +252,54 @@ int puts(const char *s)
 }
 
 /*
- * execve attaches tracer and runs original shared library call.
- * execve is used by bash to execute program(s) defined in command.
+ * fork creates new process and creates and attaches tracer to newly created process
  */
-int execve(const char *pathname, char *const argv[], char *const envp[])
+pid_t fork(void)
 {
-  sem_t *sem;
+  pid_t (*original_fork)() = (pid_t (*)())dlsym(RTLD_NEXT, "fork");
 
-  bool is_stdout_terminal, is_stderr_terminal;
-  if (isatty(STDOUT_FILENO)) {
-    is_stdout_terminal = true;
-  } else {
-    is_stdout_terminal = false;
-  }
-  if (isatty(STDERR_FILENO)) {
-    is_stderr_terminal = true;
-  } else {
-    is_stderr_terminal = false;
+  if (!is_terminal_setup && is_bash) {
+    pid_t result = original_fork();
+    return result;
   }
 
-  pid_t tracer_pid = -1;  /* Set tracer_pid to any value but not zero */
-  if (is_terminal_setup) {
-    sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+  pid_t tracee_pid = original_fork();
+
+  if (!tracee_pid) {
+    sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
 
-    tracer_pid = fork();
+    pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
+      /*
+       * Close all inherited file descriptors (except 0, 1, 2).
+       * 1024 is default maximum number of fds that can be opened by process in linux.
+       */
+      for (int i = 3; i < 1024; i++) {
+        close(i);
+      }
+
+      /*
+       * Open sqlite db again, but it doesn't really matter since I plan to move to mongodb anyway.
+       */
       db = open_db();
+
       add_start_time(db, table_name);
 
+      bool is_stdout_terminal, is_stderr_terminal;
+      if (isatty(STDOUT_FILENO)) {
+        is_stdout_terminal = true;
+      }
+      if (isatty(STDERR_FILENO)) {
+        is_stderr_terminal = true;
+      }
+
       pid_t tracee_pid = getppid();
+
       int wstatus;
-      int one_time = false;
+
+      bool one_time;
+
       ptrace(PTRACE_ATTACH, tracee_pid, NULL, NULL);
 
       sem_post(sem);
@@ -284,56 +307,45 @@ int execve(const char *pathname, char *const argv[], char *const envp[])
       while(1) {
         waitpid(tracee_pid, &wstatus, 0);
 
-        /*
-         * Quick solution for receiving the same syscall 2 times in a row
-         * When I have more free time I will try to figure it out and fix it in more elegant way.
-         */
-        if (!one_time) {
-          one_time = true;
-        } else {
-          one_time = false;
-          ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
-          continue;
-        }
-
-        if (wstatus == -1) {
-          exit(EXIT_FAILURE);
-        }
-        if (WIFEXITED(wstatus)) {
-          exit(EXIT_SUCCESS);
+        if (errno == ECHILD) {
+          break;
         }
 
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
-        if(regs.orig_rax == SYS_write &&
+        if (regs.orig_rax == SYS_write &&
             ((regs.rdi == STDOUT_FILENO && is_stdout_terminal) || (regs.rdi == STDERR_FILENO && is_stderr_terminal))) {
-          struct iovec local[1];
-          local[0].iov_base = calloc(regs.rdx, sizeof(char));
-          local[0].iov_len = regs.rdx;
+          /*
+           * Quick solution for receiving the same syscall 2 times in a row
+           * When I have more free time I will try to figure it out and fix it in more elegant way.
+           */
+          if (!one_time) {
+            one_time = true;
 
-          struct iovec remote[1];
-          remote[0].iov_base = (void *)regs.rsi;
-          remote[0].iov_len = regs.rdx;
+            struct iovec local[1];
+            local[0].iov_base = calloc(regs.rdx, sizeof(char));
+            local[0].iov_len = regs.rdx;
 
-          process_vm_readv(tracee_pid, local, 1, remote, 1, 0);
-          add_output(db, table_name, local[0].iov_base);
+            struct iovec remote[1];
+            remote[0].iov_base = (void *)regs.rsi;
+            remote[0].iov_len = regs.rdx;
+
+            process_vm_readv(tracee_pid, local, 1, remote, 1, 0);
+            add_output(db, table_name, local[0].iov_base);
+          } else {
+            one_time = false;
+          }
         }
 
         ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
       }
-    }
-  }
 
-  if (tracer_pid) {
-    if (is_terminal_setup) {
+      exit(EXIT_SUCCESS);
+    } else {
       sem_wait(sem);
       sem_destroy(sem);
       munmap(sem, sizeof(sem_t));
     }
-
-    int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
-    int status = original_execve(pathname, argv, envp);
-    return status;
   }
-  return 0;
+  return tracee_pid;
 }
