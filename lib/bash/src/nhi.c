@@ -311,6 +311,14 @@ pid_t fork(void)
           break;
         }
 
+        int signal;
+        if (WIFSTOPPED(wstatus)) {
+          signal = WSTOPSIG(wstatus);
+          if (signal == SIGTRAP || signal == SIGSTOP) {
+            signal = 0;
+          }
+        }
+
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
         if (regs.orig_rax == SYS_write &&
@@ -337,7 +345,7 @@ pid_t fork(void)
           }
         }
 
-        ptrace(PTRACE_SYSCALL, tracee_pid, NULL, NULL);
+        ptrace(PTRACE_SYSCALL, tracee_pid, NULL, signal);
       }
 
       exit(EXIT_SUCCESS);
