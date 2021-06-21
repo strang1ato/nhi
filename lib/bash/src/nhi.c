@@ -28,6 +28,8 @@ int bash_history_fd;
 
 bool completion, long_completion, after_question;
 
+bool *is_stdout_terminal, *is_stderr_terminal;
+
 /*
  * set_is_bash checks if current process is bash and
  * if so sets is_bash global variable to true
@@ -269,6 +271,9 @@ pid_t fork(void)
     sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
 
+    is_stdout_terminal = mmap(NULL, sizeof(bool), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+    is_stderr_terminal = mmap(NULL, sizeof(bool), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
       /*
@@ -286,14 +291,6 @@ pid_t fork(void)
 
       add_start_time(db, table_name);
 
-      bool is_stdout_terminal, is_stderr_terminal;
-      if (isatty(STDOUT_FILENO)) {
-        is_stdout_terminal = true;
-      }
-      if (isatty(STDERR_FILENO)) {
-        is_stderr_terminal = true;
-      }
-
       pid_t tracee_pid = getppid();
 
       int wstatus;
@@ -308,6 +305,8 @@ pid_t fork(void)
         waitpid(tracee_pid, &wstatus, 0);
 
         if (errno == ECHILD) {
+          munmap(is_stdout_terminal, sizeof(bool));
+          munmap(is_stderr_terminal, sizeof(bool));
           break;
         }
 
@@ -322,7 +321,7 @@ pid_t fork(void)
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
         if (regs.orig_rax == SYS_write &&
-            ((regs.rdi == STDOUT_FILENO && is_stdout_terminal) || (regs.rdi == STDERR_FILENO && is_stderr_terminal))) {
+            ((regs.rdi == STDOUT_FILENO && *is_stdout_terminal) || (regs.rdi == STDERR_FILENO && *is_stderr_terminal))) {
           /*
            * Quick solution for receiving the same syscall 2 times in a row
            * When I have more free time I will try to figure it out and fix it in more elegant way.
@@ -356,4 +355,22 @@ pid_t fork(void)
     }
   }
   return tracee_pid;
+}
+
+/*
+ * execve sets "inter-process" variables indicating if fd refers to tty and executes original shared library call.
+ * execve is used by bash to execute program(s) defined in command.
+ */
+int execve(const char *pathname, char *const argv[], char *const envp[])
+{
+  if (isatty(STDOUT_FILENO)) {
+    *is_stdout_terminal = true;
+  }
+  if (isatty(STDERR_FILENO)) {
+    *is_stderr_terminal = true;
+  }
+
+  int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
+  int status = original_execve(pathname, argv, envp);
+  return status;
 }
