@@ -28,7 +28,9 @@ int bash_history_fd;
 
 bool completion, long_completion, after_question;
 
-bool *is_stdout_terminal, *is_stderr_terminal;
+bool (*is_fd_tty)[1024];
+
+char tty_name[15];
 
 /*
  * set_is_bash checks if current process is bash and
@@ -71,6 +73,10 @@ __attribute__((constructor)) void init()
   } else {
     sprintf(table_name, "%s", getenv("NHI_LATEST_TABLE"));
     setup_queries(table_name);
+  }
+
+  if (ttyname(STDIN_FILENO)) {
+    sprintf(tty_name, "%s", ttyname(STDIN_FILENO));
   }
 }
 
@@ -254,6 +260,23 @@ int puts(const char *s)
 }
 
 /*
+ * fetch_string fetches and returns string from given tracee address
+ */
+char *fetch_string(pid_t pid, size_t local_iov_len, void *remote_iov_base)
+{
+  struct iovec local[1];
+  local[0].iov_base = calloc(local_iov_len, sizeof(char));
+  local[0].iov_len = local_iov_len;
+
+  struct iovec remote[1];
+  remote[0].iov_base = remote_iov_base;
+  remote[0].iov_len = local_iov_len;
+
+  process_vm_readv(pid, local, 1, remote, 1, 0);
+  return local[0].iov_base;
+}
+
+/*
  * fork creates new process and creates and attaches tracer to newly created process
  */
 pid_t fork(void)
@@ -271,8 +294,7 @@ pid_t fork(void)
     sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
 
-    is_stdout_terminal = mmap(NULL, sizeof(bool), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-    is_stderr_terminal = mmap(NULL, sizeof(bool), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+    is_fd_tty = mmap(NULL, sizeof(bool)*1024, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
@@ -295,7 +317,7 @@ pid_t fork(void)
 
       int wstatus;
 
-      bool one_time;
+      bool second_time = false;
 
       ptrace(PTRACE_ATTACH, tracee_pid, NULL, NULL);
 
@@ -305,8 +327,7 @@ pid_t fork(void)
         waitpid(tracee_pid, &wstatus, 0);
 
         if (errno == ECHILD) {
-          munmap(is_stdout_terminal, sizeof(bool));
-          munmap(is_stderr_terminal, sizeof(bool));
+          munmap(is_fd_tty, sizeof(bool)*1024);
           break;
         }
 
@@ -320,28 +341,57 @@ pid_t fork(void)
 
         struct user_regs_struct regs;
         ptrace(PTRACE_GETREGS, tracee_pid, NULL, &regs);
-        if (regs.orig_rax == SYS_write &&
-            ((regs.rdi == STDOUT_FILENO && *is_stdout_terminal) || (regs.rdi == STDERR_FILENO && *is_stderr_terminal))) {
-          /*
-           * Quick solution for receiving the same syscall 2 times in a row
-           * When I have more free time I will try to figure it out and fix it in more elegant way.
-           */
-          if (!one_time) {
-            one_time = true;
-
-            struct iovec local[1];
-            local[0].iov_base = calloc(regs.rdx, sizeof(char));
-            local[0].iov_len = regs.rdx;
-
-            struct iovec remote[1];
-            remote[0].iov_base = (void *)regs.rsi;
-            remote[0].iov_len = regs.rdx;
-
-            process_vm_readv(tracee_pid, local, 1, remote, 1, 0);
-            add_output(db, table_name, local[0].iov_base);
-          } else {
-            one_time = false;
+        if (second_time) {
+          if (regs.rax != -1) {
+            switch (regs.orig_rax) {
+            case SYS_write:
+              if ((*is_fd_tty)[regs.rdi]) {
+                char *data = fetch_string(tracee_pid, regs.rdx, (void *)regs.rsi);
+                add_output(db, table_name, data);
+                free(data);
+              }
+              break;
+            case SYS_dup2:
+            case SYS_dup3:
+              if ((*is_fd_tty)[regs.rdi]) {
+                (*is_fd_tty)[regs.rsi] = true;
+              }
+              break;
+            case SYS_dup:
+              if ((*is_fd_tty)[regs.rdi]) {
+                (*is_fd_tty)[regs.rax] = true;
+              }
+              break;
+            case SYS_fcntl:
+              if (!regs.rsi && (*is_fd_tty)[regs.rdi]) {
+                (*is_fd_tty)[regs.rax] = true;
+              }
+              break;
+            case SYS_open: {
+              char *data = fetch_string(tracee_pid, 1024, (void *)regs.rdi);
+              if (!strcmp(data, tty_name)) {
+                (*is_fd_tty)[regs.rax] = true;
+              }
+              free(data);
+              break;
+            }
+            case SYS_openat: {
+              char *data = fetch_string(tracee_pid, 1024, (void *)regs.rsi);
+              if (!strcmp(data, tty_name)) {
+                (*is_fd_tty)[regs.rax] = true;
+              }
+              free(data);
+              break;
+            }
+            case SYS_close:
+              (*is_fd_tty)[regs.rdi] = false;
+              break;
+            }
           }
+
+          second_time = false;
+        } else {
+          second_time = true;
         }
 
         ptrace(PTRACE_SYSCALL, tracee_pid, NULL, signal);
@@ -364,10 +414,10 @@ pid_t fork(void)
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
   if (isatty(STDOUT_FILENO)) {
-    *is_stdout_terminal = true;
+    (*is_fd_tty)[STDOUT_FILENO] = true;
   }
   if (isatty(STDERR_FILENO)) {
-    *is_stderr_terminal = true;
+    (*is_fd_tty)[STDERR_FILENO] = true;
   }
 
   int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
