@@ -176,6 +176,9 @@ pid_t fork(void)
           if (regs.rax != -1) {
             switch (regs.orig_rax) {
             case SYS_write:
+              if (regs.rdi < 0 || regs.rdi >= 1024) {
+                break;
+              }
               if ((*is_fd_tty)[regs.rdi]) {
                 char *data = fetch_string(tracee_pid, regs.rdx, (void *)regs.rsi);
                 add_output(db, table_name, data);
@@ -184,21 +187,33 @@ pid_t fork(void)
               break;
             case SYS_dup2:
             case SYS_dup3:
+              if ((regs.rdi < 0 || regs.rdi >= 1024) || (regs.rsi < 0 || regs.rsi >= 1024)) {
+                break;
+              }
               if ((*is_fd_tty)[regs.rdi]) {
                 (*is_fd_tty)[regs.rsi] = true;
               }
               break;
             case SYS_dup:
+              if ((regs.rdi < 0 || regs.rdi >= 1024) || (regs.rax < 0 || regs.rax >= 1024)) {
+                break;
+              }
               if ((*is_fd_tty)[regs.rdi]) {
                 (*is_fd_tty)[regs.rax] = true;
               }
               break;
             case SYS_fcntl:
+              if ((regs.rdi < 0 || regs.rdi >= 1024) || (regs.rax < 0 || regs.rax >= 1024)) {
+                break;
+              }
               if (!regs.rsi && (*is_fd_tty)[regs.rdi]) {
                 (*is_fd_tty)[regs.rax] = true;
               }
               break;
             case SYS_open: {
+              if (regs.rax < 0 || regs.rax >= 1024) {
+                break;
+              }
               char *data = fetch_string(tracee_pid, 1024, (void *)regs.rdi);
               if (!strcmp(data, tty_name)) {
                 (*is_fd_tty)[regs.rax] = true;
@@ -207,6 +222,9 @@ pid_t fork(void)
               break;
             }
             case SYS_openat: {
+              if (regs.rax < 0 || regs.rax >= 1024) {
+                break;
+              }
               char *data = fetch_string(tracee_pid, 1024, (void *)regs.rsi);
               if (!strcmp(data, tty_name)) {
                 (*is_fd_tty)[regs.rax] = true;
@@ -215,6 +233,9 @@ pid_t fork(void)
               break;
             }
             case SYS_close:
+              if (regs.rdi < 0 || regs.rdi >= 1024) {
+                break;
+              }
               (*is_fd_tty)[regs.rdi] = false;
               break;
             }
