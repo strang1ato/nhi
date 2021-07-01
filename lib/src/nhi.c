@@ -119,13 +119,13 @@ pid_t fork(void)
     return result;
   }
 
+  is_fd_tty = mmap(NULL, sizeof(bool)*1024, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+
   pid_t tracee_pid = original_fork();
 
   if (!tracee_pid) {
     sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
-
-    is_fd_tty = mmap(NULL, sizeof(bool)*1024, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
