@@ -56,16 +56,17 @@ void set_is_bash()
  */
 __attribute__((constructor)) void init()
 {
-  db = open_db();
-
   set_is_bash();
 
   /*
    * if process is bash set new table_name based on current time
    */
   if (is_bash) {
+    db = open_db();
+
     sprintf(table_name, "%ld", time(NULL));
     setup_queries(table_name);
+
     create_table(db, table_name);
     create_row(db, table_name);
 
@@ -137,9 +138,6 @@ pid_t fork(void)
         close(i);
       }
 
-      /*
-       * Open sqlite db again, but it doesn't really matter since I plan to move to mongodb anyway.
-       */
       db = open_db();
 
       add_start_time(db, table_name);
