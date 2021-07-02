@@ -64,11 +64,14 @@ __attribute__((constructor)) void init()
   if (is_bash) {
     db = open_db();
 
-    sprintf(table_name, "%ld", time(NULL));
+    long current_time = time(NULL);
+    sprintf(table_name, "%ld", current_time);
     setup_queries(table_name);
 
     create_table(db, table_name);
     create_row(db, table_name);
+
+    meta_create_row(db, current_time, table_name);
 
     setenv("NHI_LATEST_TABLE", table_name, 1);
   } else {
@@ -86,6 +89,10 @@ __attribute__((constructor)) void init()
  */
 __attribute__((destructor)) void destroy()
 {
+  if (is_bash) {
+    meta_add_finish_time(db, table_name);
+  }
+
   sqlite3_close(db);
 }
 
@@ -130,6 +137,8 @@ pid_t fork(void)
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
+      is_bash = false;
+
       /*
        * Close all inherited file descriptors (except 0, 1, 2).
        * 1024 is default maximum number of fds that can be opened by process in linux.

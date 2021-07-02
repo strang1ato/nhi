@@ -201,3 +201,58 @@ void add_indicator(sqlite3 *db, const char *table_name)
   }
   sqlite3_finalize(stmt);
 }
+
+/*
+ * meta_create_row creates new row in meta table and fills it with indicator, name and start_time
+ */
+void meta_create_row(sqlite3 *db, long indicator, const char *name)
+{
+  sqlite3_stmt *stmt;
+  char *query = "INSERT INTO `meta` VALUES (?1, ?2, ?3, NULL);";
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_prepare_v2 function failed at meta_create_row\n");
+  }
+
+  if (sqlite3_bind_int64(stmt, 1, indicator) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_bind_int64 function failed at meta_create_row\n");
+  }
+  if (sqlite3_bind_text(stmt, 2, name, strlen(name), NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_bind_text function failed at meta_create_row\n");
+  }
+  char *date = get_date();
+  if (sqlite3_bind_text(stmt, 3, date, strlen(date), NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_bind_text function failed at meta_create_row\n");
+  }
+
+  if (sqlite3_step(stmt) != SQLITE_DONE) {
+    write_error_to_log_file("sqlite3_step function failed at meta_create_row\n");
+  }
+
+  sqlite3_finalize(stmt);
+}
+
+/*
+ * add_finish_time adds finish time to the last row of meta table
+ */
+void meta_add_finish_time(sqlite3 *db, const char *name)
+{
+  sqlite3_stmt *stmt;
+  char *query = "UPDATE `meta` SET finish_time=?1 WHERE name=?2;";
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_prepare_v2 function failed at meta_add_finish_time\n");
+  }
+
+  char *date = get_date();
+  if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_bind_text function failed at meta_add_finish_time\n");
+  }
+  if (sqlite3_bind_text(stmt, 2, name, strlen(name), NULL) != SQLITE_OK) {
+    write_error_to_log_file("sqlite3_bind_text function failed at meta_add_finish_time\n");
+  }
+
+  if (sqlite3_step(stmt) != SQLITE_DONE) {
+    write_error_to_log_file("sqlite3_step function failed at meta_add_finish_time\n");
+  }
+
+  sqlite3_finalize(stmt);
+}
