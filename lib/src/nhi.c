@@ -73,9 +73,9 @@ __attribute__((constructor)) void init()
 
     meta_create_row(db, current_time, table_name);
 
-    setenv("NHI_LATEST_TABLE", table_name, 1);
+    setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
-    sprintf(table_name, "%s", getenv("NHI_LATEST_TABLE"));
+    sprintf(table_name, "%s", getenv("NHI_CURRENT_SHELL_INDICATOR"));
     setup_queries(table_name);
   }
 
