@@ -39,11 +39,11 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
   ssize_t status = original_write(filedes, buffer, size);
   if (is_bash && filedes == bash_history_fd) {
-    add_command(db, table_name, buffer, size);
-    add_finish_time(db, table_name);
-    add_indicator(db, table_name);
+    add_command(db, buffer, size);
+    add_finish_time(db);
+    add_indicator(db);
 
-    create_row(db, table_name);
+    create_row(db);
 
     bash_history_fd = 0;
   }
@@ -108,7 +108,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(db, table_name, output);
+    add_output(db, output);
   }
   return result;
 }
@@ -134,7 +134,7 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(db, table_name, output);
+    add_output(db, output);
   }
   return result;
 }
@@ -150,7 +150,7 @@ int putc(int c, FILE *stream)
 
   if (is_bash && stream == stdout && isatty(STDOUT_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
-    add_output(db, table_name, s);
+    add_output(db, s);
   }
   return result;
 }
@@ -164,7 +164,7 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash && isatty(STDOUT_FILENO)) {
-    add_output(db, table_name, s);
+    add_output(db, s);
   }
   return status;
 }

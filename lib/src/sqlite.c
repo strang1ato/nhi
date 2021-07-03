@@ -5,8 +5,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-char create_table_query[110],
-     create_row_query[100],
+char create_row_query[100],
      add_command_query[100],
      add_output_query[100],
      add_start_time_query[100],
@@ -18,8 +17,6 @@ char create_table_query[110],
  */
 void setup_queries(const char *table_name)
 {
-  sprintf(create_table_query, "%s%s%s",
-          "CREATE TABLE `", table_name, "` (command TEXT, output TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
   sprintf(create_row_query, "%s%s%s",
           "INSERT INTO `", table_name, "` VALUES (NULL, '', NULL, NULL, NULL);");
   sprintf(add_command_query, "%s%s%s%s%s",
@@ -37,13 +34,16 @@ void setup_queries(const char *table_name)
 /*
  * write_error_to_log_file writes given error message to log file
  */
-int write_error_to_log_file(char *message)
+int write_error_to_log_file(sqlite3 *db, char *external_function, char *internal_function)
 {
   char *log_path = getenv("NHI_LOG_PATH");
   if (!log_path) {
     return EXIT_FAILURE;
   }
   FILE *log_fd = fopen(log_path, "a");
+  char message[200];
+  sprintf(message,
+          "%s function executed within %s returned error message: %s\n", internal_function, external_function, sqlite3_errmsg(db));
   fputs(message, log_fd);
   fclose(log_fd);
   return EXIT_SUCCESS;
@@ -69,7 +69,7 @@ sqlite3 *open_db()
   sqlite3 *db;
   char *db_path = getenv("NHI_DB_PATH");
   if (sqlite3_open(db_path, &db) != SQLITE_OK) {
-    write_error_to_log_file("Operation of opening database failed\n");
+    write_error_to_log_file(db, "open_db", "sqlite3_open");
   }
   return db;
 }
@@ -80,108 +80,127 @@ sqlite3 *open_db()
 void create_table(sqlite3 *db, const char *table_name)
 {
   sqlite3_stmt *stmt;
-  if (sqlite3_prepare_v2(db, create_table_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at create_table\n");
+  char query[110];
+  sprintf(query, "%s%s%s",
+          "CREATE TABLE `", table_name, "` (command TEXT, output TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+    write_error_to_log_file(db, "create_table", "sqlite3_prepare_v2");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at create_table\n");
+    write_error_to_log_file(db, "create_table", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * create_row creates new empty row
  */
-void create_row(sqlite3 *db, const char *table_name)
+void create_row(sqlite3 *db)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, create_row_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at create_row\n");
+    write_error_to_log_file(db, "create_row", "sqlite3_prepare_v2");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at create_row\n");
+    write_error_to_log_file(db, "create_row", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * add_command adds executed command to the last row
  */
-void add_command(sqlite3 *db, const char *table_name, const void *command, size_t size)
+void add_command(sqlite3 *db, const void *command, size_t size)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_command_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at add_command\n");
+    write_error_to_log_file(db, "add_command", "sqlite3_prepare_v2");
   }
+
   if (sqlite3_bind_text(stmt, 1, command, size, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at add_command\n");
+    write_error_to_log_file(db, "add_command", "sqlite3_bind_text");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at add_command\n");
+    write_error_to_log_file(db, "add_command", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * add_output adds output to the last row
  */
-void add_output(sqlite3 *db, const char *table_name, const void *data)
+void add_output(sqlite3 *db, const void *data)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_output_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at add_output\n");
+    write_error_to_log_file(db, "add_output", "sqlite3_prepare_v2");
   }
+
   if (sqlite3_bind_text(stmt, 1, data, strlen(data), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at add_output\n");
+    write_error_to_log_file(db, "add_output", "sqlite3_bind_text");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at add_output\n");
+    write_error_to_log_file(db, "add_output", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * add_start_time adds start time to the last row
  */
-void add_start_time(sqlite3 *db, const char *table_name)
+void add_start_time(sqlite3 *db)
 {
-  char *date = get_date();
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_start_time_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at add_start_time\n");
+    write_error_to_log_file(db, "add_start_time", "sqlite3_prepare_v2");
   }
+
+  char *date = get_date();
   if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at add_start_time\n");
+    write_error_to_log_file(db, "add_start_time", "sqlite3_bind_text");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at add_start_time\n");
+    write_error_to_log_file(db, "add_start_time", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * add_finish_time adds finish time to the last row
  */
-void add_finish_time(sqlite3 *db, const char *table_name)
+void add_finish_time(sqlite3 *db)
 {
-  char *date = get_date();
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_finish_time_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at add_finish_time\n");
+    write_error_to_log_file(db, "add_finish_time", "sqlite3_prepare_v2");
   }
+
+  char *date = get_date();
   if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at add_finish_time\n");
+    write_error_to_log_file(db, "add_finish_time", "sqlite3_bind_text");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at add_finish_time\n");
+    write_error_to_log_file(db, "add_finish_time", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
 /*
  * add_indicator adds time in deciseconds since unix epoch to the last row
  */
-void add_indicator(sqlite3 *db, const char *table_name)
+void add_indicator(sqlite3 *db)
 {
   struct timeval now;
   gettimeofday(&now, NULL);
@@ -190,15 +209,17 @@ void add_indicator(sqlite3 *db, const char *table_name)
   time_t indicator = seconds_part + deciseconds_part;
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_indicator_query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at add_indicator\n");
-    printf("Error: %s\n", sqlite3_errmsg(db));
+    write_error_to_log_file(db, "add_indicator", "sqlite3_prepare_v2");
   }
+
   if (sqlite3_bind_int64(stmt, 1, indicator) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_int64 function failed at add_indicator\n");
+    write_error_to_log_file(db, "add_indicator", "sqlite3_bind_int64");
   }
+
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at add_indicator\n");
+    write_error_to_log_file(db, "add_indicator", "sqlite3_step");
   }
+
   sqlite3_finalize(stmt);
 }
 
@@ -210,22 +231,22 @@ void meta_create_row(sqlite3 *db, long indicator, const char *name)
   sqlite3_stmt *stmt;
   char *query = "INSERT INTO `meta` VALUES (?1, ?2, ?3, NULL);";
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at meta_create_row\n");
+    write_error_to_log_file(db, "meta_create_row", "sqlite3_prepare_v2");
   }
 
   if (sqlite3_bind_int64(stmt, 1, indicator) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_int64 function failed at meta_create_row\n");
+    write_error_to_log_file(db, "meta_create_row", "sqlite3_bind_int64");
   }
   if (sqlite3_bind_text(stmt, 2, name, strlen(name), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at meta_create_row\n");
+    write_error_to_log_file(db, "meta_create_row", "sqlite3_bind_text");
   }
   char *date = get_date();
   if (sqlite3_bind_text(stmt, 3, date, strlen(date), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at meta_create_row\n");
+    write_error_to_log_file(db, "meta_create_row", "sqlite3_bind_text");
   }
 
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at meta_create_row\n");
+    write_error_to_log_file(db, "meta_create_row", "sqlite3_step");
   }
 
   sqlite3_finalize(stmt);
@@ -239,19 +260,19 @@ void meta_add_finish_time(sqlite3 *db, const char *name)
   sqlite3_stmt *stmt;
   char *query = "UPDATE `meta` SET finish_time=?1 WHERE name=?2;";
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_prepare_v2 function failed at meta_add_finish_time\n");
+    write_error_to_log_file(db, "meta_add_finish_time", "sqlite3_prepare_v2");
   }
 
   char *date = get_date();
   if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at meta_add_finish_time\n");
+    write_error_to_log_file(db, "meta_add_finish_time", "sqlite3_bind_text");
   }
   if (sqlite3_bind_text(stmt, 2, name, strlen(name), NULL) != SQLITE_OK) {
-    write_error_to_log_file("sqlite3_bind_text function failed at meta_add_finish_time\n");
+    write_error_to_log_file(db, "meta_add_finish_time", "sqlite3_bind_text");
   }
 
   if (sqlite3_step(stmt) != SQLITE_DONE) {
-    write_error_to_log_file("sqlite3_step function failed at meta_add_finish_time\n");
+    write_error_to_log_file(db, "meta_add_finish_time", "sqlite3_step");
   }
 
   sqlite3_finalize(stmt);

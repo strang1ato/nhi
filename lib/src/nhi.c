@@ -69,7 +69,7 @@ __attribute__((constructor)) void init()
     setup_queries(table_name);
 
     create_table(db, table_name);
-    create_row(db, table_name);
+    create_row(db);
 
     meta_create_row(db, current_time, table_name);
 
@@ -149,7 +149,7 @@ pid_t fork(void)
 
       db = open_db();
 
-      add_start_time(db, table_name);
+      add_start_time(db);
 
       pid_t tracee_pid = getppid();
 
@@ -188,7 +188,7 @@ pid_t fork(void)
               }
               if ((*is_fd_tty)[regs.rdi]) {
                 char *data = fetch_string(tracee_pid, regs.rdx, (void *)regs.rsi);
-                add_output(db, table_name, data);
+                add_output(db, data);
                 free(data);
               }
               break;
