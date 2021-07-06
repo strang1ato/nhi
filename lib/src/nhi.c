@@ -50,7 +50,7 @@ char *get_proc_name(pid_t pid)
 /*
  * init runs when shared library is loaded
  */
-__attribute__((constructor)) void init()
+__attribute__((constructor)) void init(void)
 {
   {
     char *proc_name = get_proc_name(getpid());
@@ -96,7 +96,7 @@ __attribute__((constructor)) void init()
 /*
  * destroy runs when shared library is unloaded
  */
-__attribute__((destructor)) void destroy()
+__attribute__((destructor)) void destroy(void)
 {
   if (is_bash) {
     meta_add_finish_time(db, table_name);

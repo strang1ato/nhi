@@ -114,7 +114,7 @@ void create_row(sqlite3 *db)
 /*
  * add_command adds executed command to the last row
  */
-void add_command(sqlite3 *db, const void *command, size_t size)
+void add_command(sqlite3 *db, const char *command, size_t size)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_command_query, -1, &stmt, NULL) != SQLITE_OK) {
@@ -135,7 +135,7 @@ void add_command(sqlite3 *db, const void *command, size_t size)
 /*
  * add_output adds output to the last row
  */
-void add_output(sqlite3 *db, const void *data)
+void add_output(sqlite3 *db, const char *data)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_output_query, -1, &stmt, NULL) != SQLITE_OK) {
