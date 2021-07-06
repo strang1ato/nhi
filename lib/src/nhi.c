@@ -32,23 +32,19 @@ bool (*is_fd_tty)[1024];
 
 char tty_name[15];
 
-/*
- * set_is_bash checks if current process is bash and
- * if so sets is_bash global variable to true
- */
-void set_is_bash()
+char *get_proc_name(pid_t pid)
 {
-  pid_t pid = getpid();
   char path[18];
   sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
-  FILE *stream = fopen(path, "r");
-
-  char context[5];
-  fgets(context, 5, stream);
-  if (strcmp(context, "bash") == 0) {
-    is_bash = true;
+  if (access(path, F_OK)) {
+    return NULL;
   }
+  FILE *stream = fopen(path, "r");
+  char context[11];
+  fgets(context, 11, stream);
   fclose(stream);
+  char *name = context;
+  return name;
 }
 
 /*
@@ -56,7 +52,20 @@ void set_is_bash()
  */
 __attribute__((constructor)) void init()
 {
-  set_is_bash();
+  {
+    char *proc_name = get_proc_name(getpid());
+    if (!strcmp(proc_name, "bash\n")) {
+      is_bash = true;
+    }
+  }
+
+  if (is_bash) {
+    pid_t tracer_pid = getpid() + 1;
+    char *proc_name = get_proc_name(tracer_pid);
+    if (proc_name && !strcmp(proc_name, "nhi-tracer")) {
+      kill(tracer_pid, SIGKILL);
+    }
+  }
 
   /*
    * if process is bash set new table_name based on current time
@@ -138,6 +147,12 @@ pid_t fork(void)
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
       is_bash = false;
+      pid_t pid = getpid();
+      char path[18];
+      sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
+      FILE *stream = fopen(path, "w");
+      fputs("nhi-tracer", stream);
+      fclose(stream);
 
       /*
        * Close all inherited file descriptors (except 0, 1, 2).
