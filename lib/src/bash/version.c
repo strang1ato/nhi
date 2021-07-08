@@ -108,7 +108,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(db, output);
+    add_output(db, output, &stdout_specificity);
   }
   return result;
 }
@@ -134,7 +134,11 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(db, output);
+    if (stream == stdout) {
+      add_output(db, output, &stdout_specificity);
+    } else {
+      add_output(db, output, &stderr_specificity);
+    }
   }
   return result;
 }
@@ -150,7 +154,7 @@ int putc(int c, FILE *stream)
 
   if (is_bash && stream == stdout && isatty(STDOUT_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
-    add_output(db, s);
+    add_output(db, s, &stdout_specificity);
   }
   return result;
 }
@@ -164,7 +168,7 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash && isatty(STDOUT_FILENO)) {
-    add_output(db, s);
+    add_output(db, s, &stdout_specificity);
   }
   return status;
 }

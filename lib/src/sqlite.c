@@ -22,7 +22,7 @@ void setup_queries(const char *table_name)
   sprintf(add_command_query, "%s%s%s%s%s",
           "UPDATE `", table_name, "` SET command=? WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   sprintf(add_output_query, "%s%s%s%s%s",
-          "UPDATE `", table_name, "` SET output=output || ? WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+          "UPDATE `", table_name, "` SET output=output || ?1 || ?2 WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   sprintf(add_start_time_query, "%s%s%s%s%s",
           "UPDATE `", table_name, "` SET start_time=? WHERE start_time is NULL AND rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   sprintf(add_finish_time_query, "%s%s%s%s%s",
@@ -82,7 +82,7 @@ void create_table(sqlite3 *db, const char *table_name)
   sqlite3_stmt *stmt;
   char query[110];
   sprintf(query, "%s%s%s",
-          "CREATE TABLE `", table_name, "` (command TEXT, output TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
+          "CREATE TABLE `", table_name, "` (command TEXT, output BLOB, start_time TEXT, finish_time TEXT, indicator INTEGER);");
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
     write_error_to_log_file(db, "create_table", "sqlite3_prepare_v2");
   }
@@ -135,14 +135,17 @@ void add_command(sqlite3 *db, const char *command, size_t size)
 /*
  * add_output adds output to the last row
  */
-void add_output(sqlite3 *db, const char *data)
+void add_output(sqlite3 *db, const char *data, const char *specificity)
 {
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, add_output_query, -1, &stmt, NULL) != SQLITE_OK) {
     write_error_to_log_file(db, "add_output", "sqlite3_prepare_v2");
   }
 
-  if (sqlite3_bind_text(stmt, 1, data, strlen(data), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_blob(stmt, 1, specificity, 1, NULL) != SQLITE_OK) {
+    write_error_to_log_file(db, "add_output", "sqlite3_bind_text");
+  }
+  if (sqlite3_bind_blob(stmt, 2, data, strlen(data), NULL) != SQLITE_OK) {
     write_error_to_log_file(db, "add_output", "sqlite3_bind_text");
   }
 
@@ -276,4 +279,22 @@ void meta_add_finish_time(sqlite3 *db, const char *name)
   }
 
   sqlite3_finalize(stmt);
+}
+
+/*
+ * get_latest_indicator gets latest shell indicator
+ */
+char *get_latest_indicator(sqlite3 *db)
+{
+  sqlite3_stmt *stmt;
+  char *query = "SELECT name FROM `meta` ORDER BY rowid DESC LIMIT 1;";
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+    write_error_to_log_file(db, "get_latest_indicator", "sqlite3_prepare_v2");
+  }
+  sqlite3_step(stmt);  /* No if check, because function complains for no reason, yet it works */
+
+  char *indicator = malloc(11 * sizeof(char));
+  strcpy(indicator, (char *)sqlite3_column_text(stmt, 0));
+  sqlite3_finalize(stmt);
+  return indicator;
 }
