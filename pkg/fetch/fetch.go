@@ -10,10 +10,10 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(tableName, startEndRange string) error {
+func Fetch(tableName, startEndRange string) (string, error) {
 	db, err := sqlite.OpenDb()
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	startEndRange = strings.TrimPrefix(startEndRange, "[")
@@ -31,11 +31,11 @@ func Fetch(tableName, startEndRange string) error {
 
 	intStartRange, err := strconv.Atoi(sliceStartEndRange[0])
 	if err != nil {
-		return errors.New("Start range is not a number")
+		return "", errors.New("Start range is not a number")
 	}
 	intEndRange, err := strconv.Atoi(sliceStartEndRange[1])
 	if err != nil {
-		return errors.New("End range is not a number")
+		return "", errors.New("End range is not a number")
 	}
 
 	var query string
@@ -83,14 +83,15 @@ func Fetch(tableName, startEndRange string) error {
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+tableName {
-			return errors.New("no such shell session: " + tableName)
+			return "", errors.New("no such shell session: " + tableName)
 		}
-		return err
+		return "", err
 	}
 
 	var content strings.Builder
 	for rows.Next() {
-		var command, output string
+		var command string
+		var output []byte
 		rows.Scan(&command, &output)
 
 		if command == "" {
@@ -98,9 +99,19 @@ func Fetch(tableName, startEndRange string) error {
 		}
 		content.WriteString("PS1 ")
 		content.WriteString(command)
-		content.WriteString(output)
+		for i, character := range output {
+			if character == 255 || character == 254 {
+				output[i] = 0 /* for now set byte to NUL */
+			} else if character == 253 {
+				subShellOutput, err := Fetch(string(output[i+1:i+11]), ":")
+				if err != nil {
+					return "", err
+				}
+				helperOutput := append(output[:i], []byte(subShellOutput)...)
+				output = append(helperOutput, output[i+11:]...)
+			}
+		}
+		content.Write(output)
 	}
-
-	fmt.Print(content.String())
-	return nil
+	return content.String(), nil
 }
