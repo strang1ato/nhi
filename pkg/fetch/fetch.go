@@ -3,6 +3,7 @@ package fetch
 import (
 	"errors"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -10,10 +11,10 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(tableName, startEndRange string) (string, error) {
+func Fetch(tableName, startEndRange string) error {
 	db, err := sqlite.OpenDb()
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	startEndRange = strings.TrimPrefix(startEndRange, "[")
@@ -31,11 +32,11 @@ func Fetch(tableName, startEndRange string) (string, error) {
 
 	intStartRange, err := strconv.Atoi(sliceStartEndRange[0])
 	if err != nil {
-		return "", errors.New("Start range is not a number")
+		return errors.New("Start range is not a number")
 	}
 	intEndRange, err := strconv.Atoi(sliceStartEndRange[1])
 	if err != nil {
-		return "", errors.New("End range is not a number")
+		return errors.New("End range is not a number")
 	}
 
 	var query string
@@ -83,12 +84,11 @@ func Fetch(tableName, startEndRange string) (string, error) {
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+tableName {
-			return "", errors.New("no such shell session: " + tableName)
+			return errors.New("no such shell session: " + tableName)
 		}
-		return "", err
+		return err
 	}
 
-	var content strings.Builder
 	for rows.Next() {
 		var command string
 		var output []byte
@@ -97,21 +97,50 @@ func Fetch(tableName, startEndRange string) (string, error) {
 		if command == "" {
 			continue
 		}
-		content.WriteString("PS1 ")
-		content.WriteString(command)
+		fmt.Print("PS1 ")
+		fmt.Print(command)
+
+		var stdoutOutput, stderrOutput []byte
+		var writeStdout bool
 		for i, character := range output {
-			if character == 255 || character == 254 {
-				output[i] = 0 /* for now set byte to NUL */
-			} else if character == 253 {
-				subShellOutput, err := Fetch(string(output[i+1:i+11]), ":")
-				if err != nil {
-					return "", err
+			if character == 255 {
+				writeStdout = true
+				if len(stdoutOutput) > 0 {
+					fmt.Print(string(stdoutOutput))
+					stdoutOutput = nil
+				} else if len(stderrOutput) > 0 {
+					fmt.Fprint(os.Stderr, string(stderrOutput))
+					stderrOutput = nil
 				}
-				helperOutput := append(output[:i], []byte(subShellOutput)...)
-				output = append(helperOutput, output[i+11:]...)
+			} else if character == 254 {
+				writeStdout = false
+				if len(stdoutOutput) > 0 {
+					fmt.Print(string(stdoutOutput))
+					stdoutOutput = nil
+				} else if len(stderrOutput) > 0 {
+					fmt.Fprint(os.Stderr, string(stderrOutput))
+					stderrOutput = nil
+				}
+			} else if character == 253 {
+				if err := Fetch(string(output[i+1:i+11]), ":"); err != nil {
+					return err
+				}
+				copy(output[i+1:i+11], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+			} else {
+				if writeStdout == true {
+					stdoutOutput = append(stdoutOutput, character)
+				} else {
+					stderrOutput = append(stderrOutput, character)
+				}
 			}
 		}
-		content.Write(output)
+		if len(stdoutOutput) > 0 {
+			fmt.Print(string(stdoutOutput))
+			stdoutOutput = nil
+		} else if len(stderrOutput) > 0 {
+			fmt.Fprint(os.Stderr, string(stderrOutput))
+			stderrOutput = nil
+		}
 	}
-	return content.String(), nil
+	return nil
 }

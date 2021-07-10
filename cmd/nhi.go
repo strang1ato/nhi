@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 
 	"github.com/alecthomas/kong"
 	"github.com/strang1ato/nhi/pkg/fetch"
@@ -35,17 +34,13 @@ func Run() error {
 		}
 
 	case "fetch <session-name>":
-		output, err := fetch.Fetch(cli.Fetch.TableName, ":")
-		if err != nil {
+		if err := fetch.Fetch(cli.Fetch.TableName, ":"); err != nil {
 			return err
 		}
-		fmt.Print(output)
 	case "fetch <session-name> <start:end>":
-		output, err := fetch.Fetch(cli.Fetch.TableName, cli.Fetch.StartEndRange)
-		if err != nil {
+		if err := fetch.Fetch(cli.Fetch.TableName, cli.Fetch.StartEndRange); err != nil {
 			return err
 		}
-		fmt.Print(output)
 	default:
 		return errors.New("Command not found")
 	}
