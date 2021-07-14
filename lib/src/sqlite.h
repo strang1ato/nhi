@@ -1,7 +1,7 @@
 #include <sqlite3.h>
 #include <stddef.h>
 
-sqlite3 *open_db();
+sqlite3 *open_db(void);
 
 void setup_queries(const char *);
 

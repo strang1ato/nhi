@@ -12,7 +12,7 @@ char create_row_query[100],
      add_finish_time_query[100],
      add_indicator_query[100];
 
-sqlite3 *open_db();
+sqlite3 *open_db(void);
 
 void setup_queries(const char *);
 
@@ -28,7 +28,7 @@ void add_indicator(sqlite3 *);
 
 void meta_create_row(sqlite3 *, long, const char *);
 void meta_add_finish_time(sqlite3 *, const char *);
-char *get_date();
+char *get_date(void);
 int write_error_to_log_file(sqlite3 *, char *, char *);
 
 char *get_latest_indicator(sqlite3 *);
@@ -55,7 +55,7 @@ void setup_queries(const char *table_name)
 /*
  * open_db opens nhi database
  */
-sqlite3 *open_db()
+sqlite3 *open_db(void)
 {
   sqlite3 *db;
   char *db_path = getenv("NHI_DB_PATH");
@@ -275,7 +275,7 @@ void meta_add_finish_time(sqlite3 *db, const char *name)
 /*
  * get_date returns date with current time
  */
-char *get_date()
+char *get_date(void)
 {
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
