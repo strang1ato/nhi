@@ -41,10 +41,9 @@ char *get_proc_name(pid_t pid)
     return NULL;
   }
   FILE *stream = fopen(path, "r");
-  char context[11];
-  fgets(context, 11, stream);
+  char *name = malloc(11 * sizeof(char));
+  fgets(name, 11, stream);
   fclose(stream);
-  char *name = context;
   return name;
 }
 
@@ -61,6 +60,7 @@ __attribute__((constructor)) void init(void)
     if (!strcmp(proc_name, "bash\n")) {
       is_bash = true;
     }
+    free(proc_name);
   }
 
   /*
@@ -83,6 +83,7 @@ __attribute__((constructor)) void init(void)
     if (proc_name && !strcmp(proc_name, "nhi-tracer")) {
       kill(tracer_pid, SIGUSR1);
     }
+    free(proc_name);
 
     setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
