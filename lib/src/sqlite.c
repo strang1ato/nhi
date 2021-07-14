@@ -12,6 +12,27 @@ char create_row_query[100],
      add_finish_time_query[100],
      add_indicator_query[100];
 
+sqlite3 *open_db();
+
+void setup_queries(const char *);
+
+void create_table(sqlite3 *, const char *);
+
+void create_row(sqlite3 *);
+
+void add_command(sqlite3 *, const char *, size_t);
+void add_output(sqlite3 *, const char *, const char *);
+void add_start_time(sqlite3 *);
+void add_finish_time(sqlite3 *);
+void add_indicator(sqlite3 *);
+
+void meta_create_row(sqlite3 *, long, const char *);
+void meta_add_finish_time(sqlite3 *, const char *);
+char *get_date();
+int write_error_to_log_file(sqlite3 *, char *, char *);
+
+char *get_latest_indicator(sqlite3 *);
+
 /*
  * setup_queries setups global variables containing reusable queries
  */
@@ -29,36 +50,6 @@ void setup_queries(const char *table_name)
           "UPDATE `", table_name, "` SET finish_time=? WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   sprintf(add_indicator_query, "%s%s%s%s%s",
           "UPDATE `", table_name, "` SET indicator=? WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
-}
-
-/*
- * write_error_to_log_file writes given error message to log file
- */
-int write_error_to_log_file(sqlite3 *db, char *external_function, char *internal_function)
-{
-  char *log_path = getenv("NHI_LOG_PATH");
-  if (!log_path) {
-    return EXIT_FAILURE;
-  }
-  FILE *log_fd = fopen(log_path, "a");
-  char message[200];
-  sprintf(message,
-          "%s function executed within %s returned error message: %s\n", internal_function, external_function, sqlite3_errmsg(db));
-  fputs(message, log_fd);
-  fclose(log_fd);
-  return EXIT_SUCCESS;
-}
-
-/*
- * get_date returns date with current time
- */
-char *get_date()
-{
-  time_t t = time(NULL);
-  struct tm tm = *localtime(&t);
-  char *date = malloc(sizeof(char) * 20);
-  sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
-  return date;
 }
 
 /*
@@ -279,6 +270,36 @@ void meta_add_finish_time(sqlite3 *db, const char *name)
   }
 
   sqlite3_finalize(stmt);
+}
+
+/*
+ * get_date returns date with current time
+ */
+char *get_date()
+{
+  time_t t = time(NULL);
+  struct tm tm = *localtime(&t);
+  char *date = malloc(sizeof(char) * 20);
+  sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
+  return date;
+}
+
+/*
+ * write_error_to_log_file writes given error message to log file
+ */
+int write_error_to_log_file(sqlite3 *db, char *external_function, char *internal_function)
+{
+  char *log_path = getenv("NHI_LOG_PATH");
+  if (!log_path) {
+    return EXIT_FAILURE;
+  }
+  FILE *log_fd = fopen(log_path, "a");
+  char message[200];
+  sprintf(message,
+          "%s function executed within %s returned error message: %s\n", internal_function, external_function, sqlite3_errmsg(db));
+  fputs(message, log_fd);
+  fclose(log_fd);
+  return EXIT_SUCCESS;
 }
 
 /*

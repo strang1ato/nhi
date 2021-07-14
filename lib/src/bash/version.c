@@ -2,6 +2,20 @@ int bash_history_fd;
 
 bool completion, long_completion, after_question;
 
+size_t fwrite(const void *restrict, size_t, size_t, FILE *restrict);
+
+int open(const char *, int, mode_t);
+ssize_t read(int, void *, size_t);
+size_t strlen(const char *);
+
+int __printf_chk(int, const char *restrict, ...);
+int __fprintf_chk(FILE *, int, const char *, ...);
+
+int putc(int, FILE *);
+int puts(const char *);
+
+ssize_t write(int, const void *, size_t);
+
 /*
  * fwrite sets is_terminal_setup if is_bash and runs original shared library call.
  * It looks like fwrite in bash is used first time for writing prompt. At this point terminal is set up.
@@ -35,41 +49,6 @@ int open(const char *pathname, int flags, mode_t mode)
 }
 
 /*
- * write adds proper fields and new row to db if certain conditions are met and runs original shared library call.
- * Proper fields to db are added if write is used to update .bash_history file right after command execution.
- */
-ssize_t write(int filedes, const void *buffer, size_t size)
-{
-  ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
-  ssize_t status = original_write(filedes, buffer, size);
-  if (is_bash && filedes == bash_history_fd) {
-    add_command(db, buffer, size);
-    add_finish_time(db);
-    add_indicator(db);
-
-    create_row(db);
-
-    bash_history_fd = 0;
-  }
-  return status;
-}
-
-/*
- * if is_bash and "lead=${COMP_LINE:0:$COMP_POINT}" is provided as arg
- * we can be sure that completion is printing
- */
-size_t strlen(const char *s)
-{
-  size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
-  size_t result = original_strlen(s);
-
-  if (is_bash && !strcmp(s, "lead=${COMP_LINE:0:$COMP_POINT}")) {
-    completion = true;
-  }
-  return result;
-}
-
-/*
  * if buf is read from stdin and certain conditions are met change values of variables
  */
 ssize_t read(int fd, void *buf, size_t count)
@@ -92,6 +71,21 @@ ssize_t read(int fd, void *buf, size_t count)
     if (lower_buf == 'n') {
       long_completion = false;
     }
+  }
+  return result;
+}
+
+/*
+ * if is_bash and "lead=${COMP_LINE:0:$COMP_POINT}" is provided as arg
+ * we can be sure that completion is printing
+ */
+size_t strlen(const char *s)
+{
+  size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
+  size_t result = original_strlen(s);
+
+  if (is_bash && !strcmp(s, "lead=${COMP_LINE:0:$COMP_POINT}")) {
+    completion = true;
   }
   return result;
 }
@@ -173,6 +167,26 @@ int puts(const char *s)
 
   if (is_bash && isatty(STDOUT_FILENO)) {
     add_output(db, s, &stdout_specificity);
+  }
+  return status;
+}
+
+/*
+ * write adds proper fields and new row to db if certain conditions are met and runs original shared library call.
+ * Proper fields to db are added if write is used to update .bash_history file right after command execution.
+ */
+ssize_t write(int filedes, const void *buffer, size_t size)
+{
+  ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
+  ssize_t status = original_write(filedes, buffer, size);
+  if (is_bash && filedes == bash_history_fd) {
+    add_command(db, buffer, size);
+    add_finish_time(db);
+    add_indicator(db);
+
+    create_row(db);
+
+    bash_history_fd = 0;
   }
   return status;
 }

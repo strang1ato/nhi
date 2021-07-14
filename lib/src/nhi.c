@@ -33,19 +33,13 @@ bool (*is_fd_tty)[1024];
 
 char tty_name[15];
 
-char *get_proc_name(pid_t pid)
-{
-  char path[18];
-  sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
-  if (access(path, F_OK)) {
-    return NULL;
-  }
-  FILE *stream = fopen(path, "r");
-  char *name = malloc(11 * sizeof(char));
-  fgets(name, 11, stream);
-  fclose(stream);
-  return name;
-}
+void init(void);
+char *get_proc_name(pid_t);
+void destroy(void);
+
+pid_t fork(void);
+char *fetch_string(pid_t, size_t, void *);
+int execve(const char *, char *const [], char *const []);
 
 /*
  * init runs when shared library is loaded
@@ -96,6 +90,20 @@ __attribute__((constructor)) void init(void)
   }
 }
 
+char *get_proc_name(pid_t pid)
+{
+  char path[18];
+  sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
+  if (access(path, F_OK)) {
+    return NULL;
+  }
+  FILE *stream = fopen(path, "r");
+  char *name = malloc(11 * sizeof(char));
+  fgets(name, 11, stream);
+  fclose(stream);
+  return name;
+}
+
 /*
  * destroy runs when shared library is unloaded
  */
@@ -109,23 +117,6 @@ __attribute__((destructor)) void destroy(void)
 }
 
 #include "bash/version.c"
-
-/*
- * fetch_string fetches and returns string from given tracee address
- */
-char *fetch_string(pid_t pid, size_t local_iov_len, void *remote_iov_base)
-{
-  struct iovec local[1];
-  local[0].iov_base = calloc(local_iov_len, sizeof(char));
-  local[0].iov_len = local_iov_len;
-
-  struct iovec remote[1];
-  remote[0].iov_base = remote_iov_base;
-  remote[0].iov_len = local_iov_len;
-
-  process_vm_readv(pid, local, 1, remote, 1, 0);
-  return local[0].iov_base;
-}
 
 /*
  * fork creates new process and creates and attaches tracer to newly created process
@@ -292,6 +283,23 @@ pid_t fork(void)
     }
   }
   return tracee_pid;
+}
+
+/*
+ * fetch_string fetches and returns string from given tracee address
+ */
+char *fetch_string(pid_t pid, size_t local_iov_len, void *remote_iov_base)
+{
+  struct iovec local[1];
+  local[0].iov_base = calloc(local_iov_len, sizeof(char));
+  local[0].iov_len = local_iov_len;
+
+  struct iovec remote[1];
+  remote[0].iov_base = remote_iov_base;
+  remote[0].iov_len = local_iov_len;
+
+  process_vm_readv(pid, local, 1, remote, 1, 0);
+  return local[0].iov_base;
 }
 
 /*
