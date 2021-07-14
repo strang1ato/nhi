@@ -1,3 +1,7 @@
+int bash_history_fd;
+
+bool completion, long_completion, after_question;
+
 /*
  * fwrite sets is_terminal_setup if is_bash and runs original shared library call.
  * It looks like fwrite in bash is used first time for writing prompt. At this point terminal is set up.

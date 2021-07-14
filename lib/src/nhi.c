@@ -29,10 +29,6 @@ char stdout_specificity,
      stderr_specificity,
      shell_specificity;
 
-int bash_history_fd;
-
-bool completion, long_completion, after_question;
-
 bool (*is_fd_tty)[1024];
 
 char tty_name[15];
