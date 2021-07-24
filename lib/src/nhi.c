@@ -1,4 +1,4 @@
-#include "sqlite.h"
+#include "sqlite_queue_client.h"
 
 #include <ctype.h>
 #include <dlfcn.h>
@@ -20,7 +20,7 @@
 #include <time.h>
 #include <unistd.h>
 
-sqlite3 *db;
+int socket_fd;
 char table_name[11];
 
 bool is_bash, is_terminal_setup;
@@ -61,16 +61,16 @@ __attribute__((constructor)) void init(void)
    * if process is bash set new table_name based on current time
    */
   if (is_bash) {
-    db = open_db();
+    socket_fd = connect_to_socket();
 
     long current_time = time(NULL);
     sprintf(table_name, "%ld", current_time);
-    setup_queries(table_name);
+    setup_vars(table_name);
 
-    create_table(db, table_name);
-    create_row(db);
+    create_table(socket_fd, table_name);
+    create_row(socket_fd);
 
-    meta_create_row(db, current_time, table_name);
+    meta_create_row(socket_fd, current_time, table_name);
 
     pid_t tracer_pid = getpid() + 1;
     char *proc_name = get_proc_name(tracer_pid);
@@ -82,7 +82,7 @@ __attribute__((constructor)) void init(void)
     setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
     sprintf(table_name, "%s", getenv("NHI_CURRENT_SHELL_INDICATOR"));
-    setup_queries(table_name);
+    setup_vars(table_name);
   }
 
   if (ttyname(STDIN_FILENO)) {
@@ -110,10 +110,9 @@ char *get_proc_name(pid_t pid)
 __attribute__((destructor)) void destroy(void)
 {
   if (is_bash) {
-    meta_add_finish_time(db, table_name);
+    meta_add_finish_time(socket_fd, table_name);
+    close_socket(socket_fd);
   }
-
-  sqlite3_close(db);
 }
 
 #include "bash/version.c"
@@ -140,8 +139,24 @@ pid_t fork(void)
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
+      /*
+       * Close all inherited file descriptors (except 0, 1, 2).
+       * 1024 is default maximum number of fds that can be opened by process in linux.
+       */
+      for (int i = 3; i < 1024; i++) {
+        close(i);
+      }
+
+      int socket_fd = connect_to_socket();
+
+      add_start_time(socket_fd);
+
       void set_shell_reference(int signum) {
-        add_output(db, get_latest_indicator(db), &shell_specificity);
+        sqlite3 *db = open_db();  /* temp solution */
+        char *indicator = get_latest_indicator(db);
+        sqlite3_close(db);
+        add_output(socket_fd, indicator, shell_specificity);
+        close_socket(socket_fd);
         exit(EXIT_SUCCESS);
       }
       signal(SIGUSR1, set_shell_reference);
@@ -153,18 +168,6 @@ pid_t fork(void)
       FILE *stream = fopen(path, "w");
       fputs("nhi-tracer", stream);
       fclose(stream);
-
-      /*
-       * Close all inherited file descriptors (except 0, 1, 2).
-       * 1024 is default maximum number of fds that can be opened by process in linux.
-       */
-      for (int i = 3; i < 1024; i++) {
-        close(i);
-      }
-
-      db = open_db();
-
-      add_start_time(db);
 
       pid_t tracee_pid = getppid();
 
@@ -204,9 +207,9 @@ pid_t fork(void)
               if ((*is_fd_tty)[regs.rdi]) {
                 char *data = fetch_string(tracee_pid, regs.rdx, (void *)regs.rsi);
                 if (regs.rdi == 2) {
-                  add_output(db, data, &stderr_specificity);
+                  add_output(socket_fd, data, stderr_specificity);
                 } else {
-                  add_output(db, data, &stdout_specificity);
+                  add_output(socket_fd, data, stdout_specificity);
                 }
                 free(data);
               }
@@ -274,6 +277,8 @@ pid_t fork(void)
 
         ptrace(PTRACE_SYSCALL, tracee_pid, NULL, signal);
       }
+
+      close_socket(socket_fd);
 
       exit(EXIT_SUCCESS);
     } else {

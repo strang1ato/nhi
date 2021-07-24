@@ -1,5 +1,5 @@
 build-lib:
-	cd lib/src/ && gcc nhi.c sqlite.c -D_GNU_SOURCE -Wall -fPIC -ldl -pthread -lsqlite3 -shared -o ../nhi.so
+	cd lib/src/ && gcc nhi.c sqlite_queue_client.c -D_GNU_SOURCE -Wall -fPIC -ldl -pthread -lsqlite3 -shared -o ../nhi.so
 
 build-cli:
 	go build main.go

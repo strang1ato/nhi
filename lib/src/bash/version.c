@@ -106,7 +106,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(db, output, &stdout_specificity);
+    add_output(socket_fd, output, stdout_specificity);
   }
   return result;
 }
@@ -133,9 +133,9 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
     vsprintf(output, format, args);
     va_end(args);
     if (stream == stdout) {
-      add_output(db, output, &stdout_specificity);
+      add_output(socket_fd, output, stdout_specificity);
     } else {
-      add_output(db, output, &stderr_specificity);
+      add_output(socket_fd, output, stderr_specificity);
     }
   }
   return result;
@@ -152,7 +152,7 @@ int putc(int c, FILE *stream)
 
   if (is_bash && stream == stdout && isatty(STDOUT_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
-    add_output(db, s, &stdout_specificity);
+    add_output(socket_fd, s, stdout_specificity);
   }
   return result;
 }
@@ -166,7 +166,7 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash && isatty(STDOUT_FILENO)) {
-    add_output(db, s, &stdout_specificity);
+    add_output(socket_fd, s, stdout_specificity);
   }
   return status;
 }
@@ -180,11 +180,11 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
   ssize_t status = original_write(filedes, buffer, size);
   if (is_bash && filedes == bash_history_fd) {
-    add_command(db, buffer, size);
-    add_finish_time(db);
-    add_indicator(db);
+    add_command(socket_fd, buffer, size);
+    add_finish_time(socket_fd);
+    add_indicator(socket_fd);
 
-    create_row(db);
+    create_row(socket_fd);
 
     bash_history_fd = 0;
   }
