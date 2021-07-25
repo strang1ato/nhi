@@ -152,10 +152,8 @@ pid_t fork(void)
       add_start_time(socket_fd);
 
       void set_shell_reference(int signum) {
-        sqlite3 *db = open_db();  /* temp solution */
-        char *indicator = get_latest_indicator(db);
-        sqlite3_close(db);
-        add_output(socket_fd, indicator, shell_specificity);
+        char *param = "(SELECT name FROM `meta` ORDER BY rowid DESC LIMIT 1)";
+        add_output(socket_fd, param, shell_specificity);
         close_socket(socket_fd);
         exit(EXIT_SUCCESS);
       }

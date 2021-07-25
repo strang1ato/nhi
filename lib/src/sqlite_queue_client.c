@@ -135,8 +135,13 @@ void add_command(int socket_fd, const char *command, size_t size)
 void add_output(int socket_fd, const char *data, char specificity)
 {
   char query[110+strlen(data)];
-  sprintf(query, "%s%s%s%c%s%s%s%s%s",
-          "UPDATE `", table_name, "` SET output=output || '", specificity, "' || '", data, "' WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  if (specificity == -3) {
+    sprintf(query, "%s%s%s%c%s%s%s%s%s",  /* there is no '' between data */
+            "UPDATE `", table_name, "` SET output=output || '", specificity, "' || ", data, " WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  } else {
+    sprintf(query, "%s%s%s%c%s%s%s%s%s",
+            "UPDATE `", table_name, "` SET output=output || '", specificity, "' || '", data, "' WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  }
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
