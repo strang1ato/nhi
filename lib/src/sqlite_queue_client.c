@@ -20,8 +20,6 @@ void setup_vars(const char *);
 int connect_to_socket(void);
 void close_socket(int);
 
-sqlite3 *open_db(void);
-
 void create_table(int, const char *);
 
 void create_row(int);
@@ -35,9 +33,6 @@ void add_indicator(int);
 void meta_create_row(int, long, const char *);
 void meta_add_finish_time(int, const char *);
 char *get_date(void);
-int write_error_to_log_file(sqlite3 *, char *, char *);
-
-char *get_latest_indicator(sqlite3 *);
 
 /*
  * setup_vars setups global reusable variables
@@ -74,20 +69,6 @@ void close_socket(int socket_fd)
   write(socket_fd, "4", 1);
   write(socket_fd, "exit", 4);
   close(socket_fd);
-}
-
-/*
- * open_db opens nhi database
- * temp solution
- */
-sqlite3 *open_db(void)
-{
-  sqlite3 *db;
-  char *db_path = getenv("NHI_DB_PATH");
-  if (sqlite3_open(db_path, &db) != SQLITE_OK) {
-    write_error_to_log_file(db, "open_db", "sqlite3_open");
-  }
-  return db;
 }
 
 /*
@@ -243,40 +224,4 @@ char *get_date(void)
   char *date = malloc(sizeof(char) * 20);
   sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   return date;
-}
-
-/*
- * write_error_to_log_file writes given error message to log file
- */
-int write_error_to_log_file(sqlite3 *db, char *external_function, char *internal_function)
-{
-  char *log_path = getenv("NHI_LOG_PATH");
-  if (!log_path) {
-    return EXIT_FAILURE;
-  }
-  FILE *log_fd = fopen(log_path, "a");
-  char message[200];
-  sprintf(message,
-          "%s function executed within %s returned error message: %s\n", internal_function, external_function, sqlite3_errmsg(db));
-  fputs(message, log_fd);
-  fclose(log_fd);
-  return EXIT_SUCCESS;
-}
-
-/*
- * get_latest_indicator gets latest shell indicator
- */
-char *get_latest_indicator(sqlite3 *db)
-{
-  sqlite3_stmt *stmt;
-  char *query = "SELECT name FROM `meta` ORDER BY rowid DESC LIMIT 1;";
-  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
-    write_error_to_log_file(db, "get_latest_indicator", "sqlite3_prepare_v2");
-  }
-  sqlite3_step(stmt);  /* No if check, because function complains for no reason, yet it works */
-
-  char *indicator = malloc(11 * sizeof(char));
-  strcpy(indicator, (char *)sqlite3_column_text(stmt, 0));
-  sqlite3_finalize(stmt);
-  return indicator;
 }

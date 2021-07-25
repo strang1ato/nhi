@@ -6,8 +6,6 @@ void setup_vars(const char *);
 int connect_to_socket(void);
 void close_socket(int);
 
-sqlite3 *open_db(void);
-
 void create_table(int, const char *);
 
 void create_row(int);
@@ -20,5 +18,3 @@ void add_indicator(int);
 
 void meta_create_row(int, long, const char *);
 void meta_add_finish_time(int, const char *);
-
-char *get_latest_indicator(sqlite3 *);
