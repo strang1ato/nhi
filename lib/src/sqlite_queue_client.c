@@ -66,7 +66,7 @@ int connect_to_socket(void)
  */
 void close_socket(int socket_fd)
 {
-  write(socket_fd, "4", 1);
+  write(socket_fd, "4e", 2);
   write(socket_fd, "exit", 4);
   close(socket_fd);
 }
