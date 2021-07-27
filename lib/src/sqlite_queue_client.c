@@ -24,8 +24,8 @@ void create_table(int, const char *);
 
 void create_row(int);
 
-void add_command(int, const char *, size_t);
-void add_output(int, const char *, char);
+void add_command(int, char *, size_t);
+void add_output(int, char *, char);
 void add_start_time(int);
 void add_finish_time(int);
 void add_indicator(int);
@@ -98,9 +98,14 @@ void create_row(int socket_fd)
 /*
  * add_command adds executed command to the last row
  */
-void add_command(int socket_fd, const char *command, size_t size)
+void add_command(int socket_fd, char *command, size_t size)
 {
   char query[100+size];
+  for (int i = 0; i < size; i++) {
+    if (command[i] == '\'') {
+      command[i] = '\"';
+    }
+  }
   sprintf(query, "%s%s%s%s%s%s%s",
           "UPDATE `", table_name, "` SET command='", command, "' WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   int query_len = strlen(query);
@@ -113,9 +118,15 @@ void add_command(int socket_fd, const char *command, size_t size)
 /*
  * add_output adds output to the last row
  */
-void add_output(int socket_fd, const char *data, char specificity)
+void add_output(int socket_fd, char *data, char specificity)
 {
-  char query[110+strlen(data)];
+  int size = strlen(data);
+  for (int i = 0; i < size; i++) {
+    if (data[i] == '\'') {
+      data[i] = '\"';
+    }
+  }
+  char query[110+size];
   if (specificity == -3) {
     sprintf(query, "%s%s%s%c%s%s%s%s%s",  /* there is no '' between data */
             "UPDATE `", table_name, "` SET output=output || '", specificity, "' || ", data, " WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");

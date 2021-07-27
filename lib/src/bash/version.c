@@ -166,7 +166,7 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash && isatty(STDOUT_FILENO)) {
-    add_output(socket_fd, s, stdout_specificity);
+    add_output(socket_fd, (char *) s, stdout_specificity);
   }
   return status;
 }
@@ -180,7 +180,7 @@ ssize_t write(int filedes, const void *buffer, size_t size)
   ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
   ssize_t status = original_write(filedes, buffer, size);
   if (is_bash && filedes == bash_history_fd) {
-    add_command(socket_fd, buffer, size);
+    add_command(socket_fd, (char *) buffer, size);
     add_finish_time(socket_fd);
     add_indicator(socket_fd);
 
