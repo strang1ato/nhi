@@ -38,7 +38,7 @@ char *get_proc_name(pid_t);
 void destroy(void);
 
 pid_t fork(void);
-char *fetch_string(pid_t, size_t, void *);
+char *get_data_from_other_process(pid_t, size_t, void *);
 int execve(const char *, char *const [], char *const []);
 
 /*
@@ -203,7 +203,7 @@ pid_t fork(void)
                 break;
               }
               if ((*is_fd_tty)[regs.rdi]) {
-                char *data = fetch_string(tracee_pid, regs.rdx, (void *)regs.rsi);
+                char *data = get_data_from_other_process(tracee_pid, regs.rdx, (void *)regs.rsi);
                 if (regs.rdi == 2) {
                   add_output(socket_fd, data, stderr_specificity);
                 } else {
@@ -241,7 +241,7 @@ pid_t fork(void)
               if (regs.rax < 0 || regs.rax >= 1024) {
                 break;
               }
-              char *data = fetch_string(tracee_pid, 1024, (void *)regs.rdi);
+              char *data = get_data_from_other_process(tracee_pid, 1024, (void *)regs.rdi);
               if (!strcmp(data, tty_name)) {
                 (*is_fd_tty)[regs.rax] = true;
               }
@@ -252,7 +252,7 @@ pid_t fork(void)
               if (regs.rax < 0 || regs.rax >= 1024) {
                 break;
               }
-              char *data = fetch_string(tracee_pid, 1024, (void *)regs.rsi);
+              char *data = get_data_from_other_process(tracee_pid, 1024, (void *)regs.rsi);
               if (!strcmp(data, tty_name)) {
                 (*is_fd_tty)[regs.rax] = true;
               }
@@ -289,9 +289,9 @@ pid_t fork(void)
 }
 
 /*
- * fetch_string fetches and returns string from given tracee address
+ * get_data_from_other_process fetches and returns string from given tracee address
  */
-char *fetch_string(pid_t pid, size_t local_iov_len, void *remote_iov_base)
+char *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_iov_base)
 {
   struct iovec local[1];
   local[0].iov_base = calloc(local_iov_len, sizeof(char));
