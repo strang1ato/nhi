@@ -150,6 +150,7 @@ void add_start_time(int socket_fd)
   char *date = get_date();
   sprintf(query, "%s%s%s%s%s%s%s",
           "UPDATE `", table_name, "` SET start_time='", date, "' WHERE start_time is NULL AND rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  free(date);
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -166,6 +167,7 @@ void add_finish_time(int socket_fd)
   char *date = get_date();
   sprintf(query, "%s%s%s%s%s%s%s",
           "UPDATE `", table_name, "` SET finish_time='", date, "'WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  free(date);
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -202,6 +204,7 @@ void meta_create_row(int socket_fd, long indicator, const char *name)
   char *date = get_date();
   sprintf(query, "%s%ld%s%s%s%s%s",
           "INSERT INTO `meta` VALUES ('", indicator,"', '", name, "', '", date, "', NULL);");
+  free(date);
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -218,6 +221,7 @@ void meta_add_finish_time(int socket_fd, const char *name)
   char *date = get_date();
   sprintf(query, "%s%s%s%s%s",
           "UPDATE `meta` SET finish_time='", date, "' WHERE name='", name, "';");
+  free(date);
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -232,7 +236,7 @@ char *get_date(void)
 {
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
-  char *date = malloc(sizeof(char) * 20);
+  char *date = malloc(20 * sizeof(char));
   sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   return date;
 }
