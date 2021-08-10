@@ -33,12 +33,16 @@ bool (*is_fd_tty)[1024];
 
 char tty_name[15];
 
+char ****environ_pointer;
+
 void init(void);
 char *get_proc_name(pid_t);
+void *get_data_from_other_process(pid_t, size_t, void *);
+
 void destroy(void);
 
 pid_t fork(void);
-char *get_data_from_other_process(pid_t, size_t, void *);
+
 int execve(const char *, char *const [], char *const []);
 
 /*
@@ -79,6 +83,73 @@ __attribute__((constructor)) void init(void)
     }
     free(proc_name);
 
+    environ_pointer = mmap(NULL, sizeof(char ***), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+    pid_t prompter_pid = fork();
+    if (!prompter_pid) {
+      socket_fd = connect_to_socket();
+      void prompter(int signum) {
+        char ***original_environ = get_data_from_other_process(getppid(), sizeof(char ***), *environ_pointer);
+
+        {
+          struct iovec local[1];
+          local[0].iov_base = calloc(512, sizeof(char *));
+          local[0].iov_len = 512;
+
+          struct iovec remote[1];
+          remote[0].iov_base = *original_environ;
+          remote[0].iov_len = 512;
+
+          environ = local[0].iov_base;
+
+          process_vm_readv(getppid(), local, 1, remote, 1, 0);
+        }
+
+        {
+          struct iovec local[512];
+          struct iovec remote[512];
+          for (int i = 0; i<512; i++) {
+            local[i].iov_base = calloc(512, sizeof(char));
+            local[i].iov_len = 512;
+
+            remote[i].iov_base = environ[i];
+            remote[i].iov_len = 512;
+
+            environ[i] = local[i].iov_base;
+          }
+
+          process_vm_readv(getppid(), local, 512, remote, 512, 0);
+        }
+
+        char last_executed_command[1024];
+        if (getenv("LAST_EXECUTED_COMMAND")) {
+          sprintf(last_executed_command, "%s", getenv("LAST_EXECUTED_COMMAND"));
+        }
+
+        add_command(socket_fd, last_executed_command, strlen(last_executed_command));
+        add_finish_time(socket_fd);
+        add_indicator(socket_fd);
+
+        create_row(socket_fd);
+
+        for (int i = 0; i<512; i++) {
+          free(environ[i]);
+        }
+        free(environ);
+        free(original_environ);
+      }
+      signal(SIGUSR1, prompter);
+      while(1) {
+        if (getppid() == 1) {
+          close_socket(socket_fd);
+          exit(EXIT_SUCCESS);
+        }
+        sleep(1);
+      }
+    }
+
+    char prompter_pid_str[7];
+    sprintf(prompter_pid_str, "%d", prompter_pid);
+    setenv("NHI_PROMPTER_PID", prompter_pid_str, 1);
     setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
     sprintf(table_name, "%s", getenv("NHI_CURRENT_SHELL_INDICATOR"));
@@ -102,6 +173,23 @@ char *get_proc_name(pid_t pid)
   fgets(name, 11, stream);
   fclose(stream);
   return name;
+}
+
+/*
+ * get_data_from_other_process fetches and returns string from given process address
+ */
+void *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_iov_base)
+{
+  struct iovec local[1];
+  local[0].iov_base = calloc(local_iov_len, sizeof(char));
+  local[0].iov_len = local_iov_len;
+
+  struct iovec remote[1];
+  remote[0].iov_base = remote_iov_base;
+  remote[0].iov_len = local_iov_len;
+
+  process_vm_readv(pid, local, 1, remote, 1, 0);
+  return local[0].iov_base;
 }
 
 /*
@@ -286,23 +374,6 @@ pid_t fork(void)
     }
   }
   return tracee_pid;
-}
-
-/*
- * get_data_from_other_process fetches and returns string from given tracee address
- */
-char *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_iov_base)
-{
-  struct iovec local[1];
-  local[0].iov_base = calloc(local_iov_len, sizeof(char));
-  local[0].iov_len = local_iov_len;
-
-  struct iovec remote[1];
-  remote[0].iov_base = remote_iov_base;
-  remote[0].iov_len = local_iov_len;
-
-  process_vm_readv(pid, local, 1, remote, 1, 0);
-  return local[0].iov_base;
 }
 
 /*

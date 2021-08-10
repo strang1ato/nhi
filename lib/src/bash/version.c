@@ -25,25 +25,15 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   size_t (*original_fwrite)() = (size_t (*)())dlsym(RTLD_NEXT, "fwrite");
   size_t result = original_fwrite(ptr, size, nitems, stream);
   if (is_bash) {
-    is_terminal_setup = true;
+    if (!is_terminal_setup) {
+      *environ_pointer = &environ;
+
+      is_terminal_setup = true;
+    }
 
     if (!strcmp(ptr, "^C") && size == 1 && nitems == 2 && stream == stderr) {
       long_completion = false;
     }
-  }
-  return result;
-}
-
-/*
- * open sets bash_history_fd if certain conditions are met and runs original shared library call.
- * bash_history_fd is set if open is used to open .bash_history file right after command execution.
- */
-int open(const char *pathname, int flags, mode_t mode)
-{
-  int (*original_open)() = (int (*)())dlsym(RTLD_NEXT, "open");
-  int result = original_open(pathname, flags, mode);
-  if (is_bash && flags == 1025 && mode == 0600) {
-    bash_history_fd = result;
   }
   return result;
 }
@@ -167,26 +157,6 @@ int puts(const char *s)
 
   if (is_bash && isatty(STDOUT_FILENO)) {
     add_output(socket_fd, (char *) s, stdout_specificity);
-  }
-  return status;
-}
-
-/*
- * write adds proper fields and new row to db if certain conditions are met and runs original shared library call.
- * Proper fields to db are added if write is used to update .bash_history file right after command execution.
- */
-ssize_t write(int filedes, const void *buffer, size_t size)
-{
-  ssize_t (*original_write)() = (ssize_t (*)())dlsym(RTLD_NEXT, "write");
-  ssize_t status = original_write(filedes, buffer, size);
-  if (is_bash && filedes == bash_history_fd) {
-    add_command(socket_fd, (char *) buffer, size);
-    add_finish_time(socket_fd);
-    add_indicator(socket_fd);
-
-    create_row(socket_fd);
-
-    bash_history_fd = 0;
   }
   return status;
 }
