@@ -120,12 +120,22 @@ __attribute__((constructor)) void init(void)
           process_vm_readv(getppid(), local, 512, remote, 512, 0);
         }
 
-        char last_executed_command[1024];
-        if (getenv("LAST_EXECUTED_COMMAND")) {
-          sprintf(last_executed_command, "%s", getenv("LAST_EXECUTED_COMMAND"));
+        char *last_executed_command = getenv("LAST_EXECUTED_COMMAND");
+        if (!last_executed_command) {
+          last_executed_command = "history does not work";
         }
 
-        add_command(socket_fd, last_executed_command, strlen(last_executed_command));
+        int i = 1;
+        while(1) {
+          if (last_executed_command[i] >= 48 && last_executed_command[i] <= 57) {
+            i++;
+          } else {
+            i+=2;
+            break;
+          }
+        }
+
+        add_command(socket_fd, last_executed_command+i, strlen(last_executed_command+i));
         add_finish_time(socket_fd);
         add_indicator(socket_fd);
 
