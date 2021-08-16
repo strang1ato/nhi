@@ -26,6 +26,7 @@ void create_row(int);
 
 void add_command(int, char *, size_t);
 void add_output(int, char *, char);
+void add_pwd(int, char *);
 void add_start_time(int);
 void add_finish_time(int);
 void add_indicator(int);
@@ -40,7 +41,7 @@ char *get_date(void);
 void setup_vars(const char *name)
 {
   sprintf(create_row_query, "%s%s%s",
-          "INSERT INTO `", name, "` VALUES (NULL, '', NULL, NULL, NULL);");
+          "INSERT INTO `", name, "` VALUES (NULL, '', NULL, NULL, NULL, NULL);");
   create_row_query_len = strlen(create_row_query);
   sprintf(create_row_query_len_str, "%d", create_row_query_len);
   create_row_query_len_str_len = strlen(create_row_query_len_str);
@@ -78,7 +79,7 @@ void create_table(int socket_fd, const char *table_name)
 {
   char query[110];
   sprintf(query, "%s%s%s",
-          "CREATE TABLE `", table_name, "` (command TEXT, output BLOB, start_time TEXT, finish_time TEXT, indicator INTEGER);");
+          "CREATE TABLE `", table_name, "` (command TEXT, output BLOB, pwd TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -134,6 +135,21 @@ void add_output(int socket_fd, char *data, char specificity)
     sprintf(query, "%s%s%s%c%s%s%s%s%s",
             "UPDATE `", table_name, "` SET output=output || '", specificity, "' || '", data, "' WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   }
+  int query_len = strlen(query);
+  char query_len_str[10];
+  sprintf(query_len_str, "%d", query_len);
+  write(socket_fd, query_len_str, strlen(query_len_str));
+  write(socket_fd, query, query_len);
+}
+
+/*
+ * add_pwd adds path to current working directory to the last row
+ */
+void add_pwd(int socket_fd, char *pwd)
+{
+  char query[100+strlen(pwd)];
+  sprintf(query, "%s%s%s%s%s%s%s",
+          "UPDATE `", table_name, "` SET pwd='", pwd, "'WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
