@@ -232,6 +232,8 @@ pid_t fork(void)
   pid_t tracee_pid = original_fork();
 
   if (!tracee_pid) {
+    is_bash = false;
+
     sem_t *sem = mmap(NULL, sizeof(sem_t), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
     sem_init(sem, 1, 0);
 
@@ -257,7 +259,6 @@ pid_t fork(void)
       }
       signal(SIGUSR1, set_shell_reference);
 
-      is_bash = false;
       pid_t pid = getpid();
       char path[18];
       sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
