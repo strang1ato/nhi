@@ -15,6 +15,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
     fi
     RAN_FIRST_TIME="true"
     COMMAND_RAN=0
+    export NHI_PS1=$(echo "${PS1@P}")
   }
   declare PROMPT_COMMAND="prompter"
 fi

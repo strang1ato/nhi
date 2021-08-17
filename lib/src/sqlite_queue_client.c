@@ -24,6 +24,7 @@ void create_table(int, const char *);
 
 void create_row(int);
 
+void add_PS1(int, char *);
 void add_command(int, char *, size_t);
 void add_output(int, char *, char);
 void add_pwd(int, char *);
@@ -41,7 +42,7 @@ char *get_date(void);
 void setup_vars(const char *name)
 {
   sprintf(create_row_query, "%s%s%s",
-          "INSERT INTO `", name, "` VALUES (NULL, '', NULL, NULL, NULL, NULL);");
+          "INSERT INTO `", name, "` VALUES (NULL, NULL, '', NULL, NULL, NULL, NULL);");
   create_row_query_len = strlen(create_row_query);
   sprintf(create_row_query_len_str, "%d", create_row_query_len);
   create_row_query_len_str_len = strlen(create_row_query_len_str);
@@ -77,9 +78,9 @@ void close_socket(int socket_fd)
  */
 void create_table(int socket_fd, const char *table_name)
 {
-  char query[110];
+  char query[130];
   sprintf(query, "%s%s%s",
-          "CREATE TABLE `", table_name, "` (command TEXT, output BLOB, pwd TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
+          "CREATE TABLE `", table_name, "` (PS1 TEXT, command TEXT, output BLOB, pwd TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
   int query_len = strlen(query);
   char query_len_str[10];
   sprintf(query_len_str, "%d", query_len);
@@ -94,6 +95,21 @@ void create_row(int socket_fd)
 {
   write(socket_fd, create_row_query_len_str, create_row_query_len_str_len);
   write(socket_fd, create_row_query, create_row_query_len);
+}
+
+/*
+ * add_PS1 adds prompt to the last row
+ */
+void add_PS1(int socket_fd, char *PS1)
+{
+  char query[100+strlen(PS1)];
+  sprintf(query, "%s%s%s%s%s%s%s",
+          "UPDATE `", table_name, "` SET PS1='", PS1, "'WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
+  int query_len = strlen(query);
+  char query_len_str[10];
+  sprintf(query_len_str, "%d", query_len);
+  write(socket_fd, query_len_str, strlen(query_len_str));
+  write(socket_fd, query, query_len);
 }
 
 /*
