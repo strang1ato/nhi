@@ -24,6 +24,7 @@ int socket_fd;
 char table_name[11];
 
 bool is_bash, is_terminal_setup;
+pid_t bash_pid;
 
 char stdout_specificity,
      stderr_specificity,
@@ -65,6 +66,7 @@ __attribute__((constructor)) void init(void)
    * if process is bash set new table_name based on current time
    */
   if (is_bash) {
+    bash_pid = getpid();
     socket_fd = connect_to_socket();
 
     long current_time = time(NULL);
@@ -135,13 +137,13 @@ __attribute__((constructor)) void init(void)
           }
         }
 
-        add_PS1(socket_fd, getenv("NHI_PS1"));
         add_command(socket_fd, last_executed_command+i, strlen(last_executed_command+i));
         add_pwd(socket_fd, getenv("PWD"));
         add_finish_time(socket_fd);
         add_indicator(socket_fd);
 
         create_row(socket_fd);
+        add_PS1(socket_fd, getenv("NHI_PS1"));
 
         for (int i = 0; i<512; i++) {
           free(environ[i]);
@@ -209,7 +211,7 @@ void *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_
  */
 __attribute__((destructor)) void destroy(void)
 {
-  if (is_bash) {
+  if (is_bash && bash_pid == getpid()) {  /* double check is required, because child process may fail to overwrite is_bash */
     meta_add_finish_time(socket_fd, table_name);
     close_socket(socket_fd);
   }

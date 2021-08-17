@@ -26,6 +26,8 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   size_t result = original_fwrite(ptr, size, nitems, stream);
   if (is_bash) {
     if (!is_terminal_setup) {
+      add_PS1(socket_fd, getenv("NHI_PS1"));
+
       *environ_pointer = &environ;
 
       is_terminal_setup = true;
