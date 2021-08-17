@@ -9,7 +9,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
 
   prompter() {
     if [[ $COMMAND_RAN > 1 && "$RAN_FIRST_TIME" == "true" ]]; then
-      export LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1)
+      export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1)
       /home/karol/projects/nhi/nhi/nhi-prompter-trick
       kill -s SIGUSR1 $NHI_PROMPTER_PID
     fi

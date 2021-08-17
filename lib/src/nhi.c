@@ -120,7 +120,7 @@ __attribute__((constructor)) void init(void)
           process_vm_readv(getppid(), local, 512, remote, 512, 0);
         }
 
-        char *last_executed_command = getenv("LAST_EXECUTED_COMMAND");
+        char *last_executed_command = getenv("NHI_LAST_EXECUTED_COMMAND");
         if (!last_executed_command) {
           last_executed_command = "history does not work";
         }
