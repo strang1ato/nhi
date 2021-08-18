@@ -268,7 +268,7 @@ char *get_date(void)
 {
   time_t t = time(NULL);
   struct tm tm = *localtime(&t);
-  char *date = malloc(20 * sizeof(char));
+  char *date = malloc(20);
   sprintf(date, "%d-%02d-%02d %02d:%02d:%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec);
   return date;
 }

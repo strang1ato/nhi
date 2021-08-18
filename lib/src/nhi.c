@@ -110,7 +110,7 @@ __attribute__((constructor)) void init(void)
           struct iovec local[512];
           struct iovec remote[512];
           for (int i = 0; i<512; i++) {
-            local[i].iov_base = calloc(512, sizeof(char));
+            local[i].iov_base = calloc(512, 1);
             local[i].iov_len = 512;
 
             remote[i].iov_base = environ[i];
@@ -183,7 +183,7 @@ char *get_proc_name(pid_t pid)
     return NULL;
   }
   FILE *stream = fopen(path, "r");
-  char *name = malloc(11 * sizeof(char));
+  char *name = malloc(11);
   fgets(name, 11, stream);
   fclose(stream);
   return name;
@@ -195,7 +195,7 @@ char *get_proc_name(pid_t pid)
 void *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_iov_base)
 {
   struct iovec local[1];
-  local[0].iov_base = calloc(local_iov_len, sizeof(char));
+  local[0].iov_base = calloc(local_iov_len, 1);
   local[0].iov_len = local_iov_len;
 
   struct iovec remote[1];
