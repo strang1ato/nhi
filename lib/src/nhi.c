@@ -131,7 +131,7 @@ __attribute__((constructor)) void init(void)
           }
         }
 
-        add_command(socket_fd, last_executed_command+i, strlen(last_executed_command+i));
+        add_command(socket_fd, last_executed_command+i);
         add_pwd(socket_fd, getenv("PWD"));
         add_finish_time(socket_fd);
         add_indicator(socket_fd);

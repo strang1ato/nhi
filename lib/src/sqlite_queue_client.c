@@ -25,7 +25,7 @@ void create_table(int, const char *);
 void create_row(int);
 
 void add_PS1(int, char *);
-void add_command(int, char *, size_t);
+void add_command(int, char *);
 void add_output(int, char *, char, size_t);
 void add_pwd(int, char *);
 void add_start_time(int);
@@ -96,8 +96,9 @@ void add_PS1(int socket_fd, char *PS1)
   write(socket_fd, query, query_len);
 }
 
-void add_command(int socket_fd, char *command, size_t size)
+void add_command(int socket_fd, char *command)
 {
+  size_t size = strlen(command);
   char query[100+size];
   for (int i = 0; i < size; i++) {
     if (command[i] == '\'') {

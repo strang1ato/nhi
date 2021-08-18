@@ -11,7 +11,7 @@ void create_table(int, const char *);
 void create_row(int);
 
 void add_PS1(int, char *);
-void add_command(int, char *, size_t);
+void add_command(int, char *);
 void add_output(int, char *, char, size_t);
 void add_pwd(int, char *);
 void add_start_time(int);
