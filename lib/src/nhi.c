@@ -21,6 +21,7 @@
 #include <unistd.h>
 
 int socket_fd;
+
 char table_name[11];
 
 bool is_bash, is_terminal_setup;
@@ -33,6 +34,8 @@ char stdout_specificity,
 bool (*is_fd_tty)[1024];
 
 char tty_name[15];
+
+char prompter_pid_str[7];
 
 char ****environ_pointer;
 
@@ -155,9 +158,8 @@ __attribute__((constructor)) void init(void)
       }
     }
 
-    char prompter_pid_str[7];
     sprintf(prompter_pid_str, "%d", prompter_pid);
-    setenv("NHI_PROMPTER_PID", prompter_pid_str, 1);
+    setenv("NHI_PROMPTER_PID", "", 1);  // Set var to empty string for now
     setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
     sprintf(table_name, "%s", getenv("NHI_CURRENT_SHELL_INDICATOR"));
