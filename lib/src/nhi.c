@@ -46,9 +46,6 @@ pid_t fork(void);
 
 int execve(const char *, char *const [], char *const []);
 
-/*
- * init runs when shared library is loaded
- */
 __attribute__((constructor)) void init(void)
 {
   stdout_specificity = -1;
@@ -62,9 +59,6 @@ __attribute__((constructor)) void init(void)
     free(proc_name);
   }
 
-  /*
-   * if process is bash set new table_name based on current time
-   */
   if (is_bash) {
     bash_pid = getpid();
     socket_fd = connect_to_socket();
@@ -189,9 +183,6 @@ char *get_proc_name(pid_t pid)
   return name;
 }
 
-/*
- * get_data_from_other_process fetches and returns string from given process address
- */
 void *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_iov_base)
 {
   struct iovec local[1];
@@ -206,12 +197,9 @@ void *get_data_from_other_process(pid_t pid, size_t local_iov_len, void *remote_
   return local[0].iov_base;
 }
 
-/*
- * destroy runs when shared library is unloaded
- */
 __attribute__((destructor)) void destroy(void)
 {
-  if (is_bash && bash_pid == getpid()) {  /* double check is required, because child process may fail to overwrite is_bash */
+  if (is_bash && bash_pid == getpid()) {  // double check is required, because child process may fail to overwrite is_bash
     meta_add_finish_time(socket_fd, table_name);
     close_socket(socket_fd);
   }
@@ -219,9 +207,6 @@ __attribute__((destructor)) void destroy(void)
 
 #include "bash/version.c"
 
-/*
- * fork creates new process and creates and attaches tracer to newly created process
- */
 pid_t fork(void)
 {
   pid_t (*original_fork)() = (pid_t (*)())dlsym(RTLD_NEXT, "fork");
@@ -243,10 +228,8 @@ pid_t fork(void)
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
-      /*
-       * Close all inherited file descriptors (except 0, 1, 2).
-       * 1024 is default maximum number of fds that can be opened by process in linux.
-       */
+      // Close all inherited file descriptors (except 0, 1, 2).
+      // 1024 is default maximum number of fds that can be opened by process in linux.
       for (int i = 3; i < 1024; i++) {
         close(i);
       }
@@ -391,10 +374,6 @@ pid_t fork(void)
   return tracee_pid;
 }
 
-/*
- * execve sets "inter-process" variables indicating if fd refers to tty and executes original shared library call.
- * execve is used by bash to execute program(s) defined in command.
- */
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
   if (isatty(STDOUT_FILENO)) {

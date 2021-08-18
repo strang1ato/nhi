@@ -36,9 +36,8 @@ void meta_create_row(int, long, const char *);
 void meta_add_finish_time(int, const char *);
 char *get_date(void);
 
-/*
- * setup_vars setups global reusable variables
- */
+
+// setup_vars setups global reusable variables
 void setup_vars(const char *name)
 {
   sprintf(create_row_query, "%s%s%s",
@@ -50,9 +49,6 @@ void setup_vars(const char *name)
   strcpy(table_name, name);
 }
 
-/*
- * connect_to_socket to sqlite-queue socket and returns socket fd
- */
 int connect_to_socket(void)
 {
   int socket_fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
@@ -63,9 +59,6 @@ int connect_to_socket(void)
   return socket_fd;
 }
 
-/*
- * close_socket closes connection to socket
- */
 void close_socket(int socket_fd)
 {
   write(socket_fd, "4e", 2);
@@ -73,9 +66,6 @@ void close_socket(int socket_fd)
   close(socket_fd);
 }
 
-/*
- * create_table with given name
- */
 void create_table(int socket_fd, const char *table_name)
 {
   char query[130];
@@ -88,18 +78,12 @@ void create_table(int socket_fd, const char *table_name)
   write(socket_fd, query, query_len);
 }
 
-/*
- * create_row creates new empty row
- */
 void create_row(int socket_fd)
 {
   write(socket_fd, create_row_query_len_str, create_row_query_len_str_len);
   write(socket_fd, create_row_query, create_row_query_len);
 }
 
-/*
- * add_PS1 adds prompt to the last row
- */
 void add_PS1(int socket_fd, char *PS1)
 {
   char query[100+strlen(PS1)];
@@ -112,9 +96,6 @@ void add_PS1(int socket_fd, char *PS1)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_command adds executed command to the last row
- */
 void add_command(int socket_fd, char *command, size_t size)
 {
   char query[100+size];
@@ -132,9 +113,6 @@ void add_command(int socket_fd, char *command, size_t size)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_output adds output to the last row
- */
 void add_output(int socket_fd, char *data, char specificity)
 {
   int size = strlen(data);
@@ -145,7 +123,7 @@ void add_output(int socket_fd, char *data, char specificity)
   }
   char query[110+size];
   if (specificity == -3) {
-    sprintf(query, "%s%s%s%c%s%s%s%s%s",  /* there is no '' between data */
+    sprintf(query, "%s%s%s%c%s%s%s%s%s",  // there is no '' between data
             "UPDATE `", table_name, "` SET output=output || '", specificity, "' || ", data, " WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
   } else {
     sprintf(query, "%s%s%s%c%s%s%s%s%s",
@@ -158,9 +136,6 @@ void add_output(int socket_fd, char *data, char specificity)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_pwd adds path to current working directory to the last row
- */
 void add_pwd(int socket_fd, char *pwd)
 {
   char query[100+strlen(pwd)];
@@ -173,9 +148,6 @@ void add_pwd(int socket_fd, char *pwd)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_start_time adds start time to the last row
- */
 void add_start_time(int socket_fd)
 {
   char query[150];
@@ -190,9 +162,6 @@ void add_start_time(int socket_fd)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_finish_time adds finish time to the last row
- */
 void add_finish_time(int socket_fd)
 {
   char query[150];
@@ -207,16 +176,13 @@ void add_finish_time(int socket_fd)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_indicator adds time in deciseconds since unix epoch to the last row
- */
 void add_indicator(int socket_fd)
 {
   struct timeval now;
   gettimeofday(&now, NULL);
   time_t seconds_part = now.tv_sec*10;
   suseconds_t deciseconds_part = now.tv_usec/100000;
-  time_t indicator = seconds_part + deciseconds_part;
+  time_t indicator = seconds_part + deciseconds_part;  // indicator is time in deciseconds since unix epoch
   char query[150];
   sprintf(query, "%s%s%s%ld%s%s%s",
           "UPDATE `", table_name, "` SET indicator='", indicator, "' WHERE rowid = (SELECT MAX(rowid) FROM `", table_name, "`);");
@@ -227,9 +193,6 @@ void add_indicator(int socket_fd)
   write(socket_fd, query, query_len);
 }
 
-/*
- * meta_create_row creates new row in meta table and fills it with indicator, name and start_time
- */
 void meta_create_row(int socket_fd, long indicator, const char *name)
 {
   char query[150];
@@ -244,9 +207,6 @@ void meta_create_row(int socket_fd, long indicator, const char *name)
   write(socket_fd, query, query_len);
 }
 
-/*
- * add_finish_time adds finish time to the last row of meta table
- */
 void meta_add_finish_time(int socket_fd, const char *name)
 {
   char query[150];
@@ -261,9 +221,6 @@ void meta_add_finish_time(int socket_fd, const char *name)
   write(socket_fd, query, query_len);
 }
 
-/*
- * get_date returns date with current time
- */
 char *get_date(void)
 {
   time_t t = time(NULL);

@@ -16,10 +16,7 @@ int puts(const char *);
 
 ssize_t write(int, const void *, size_t);
 
-/*
- * fwrite sets is_terminal_setup if is_bash and runs original shared library call.
- * It looks like fwrite in bash is used first time for writing prompt. At this point terminal is set up.
- */
+// It looks like fwrite in bash is used first time for writing prompt. At this point terminal is set up.
 size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restrict stream)
 {
   size_t (*original_fwrite)() = (size_t (*)())dlsym(RTLD_NEXT, "fwrite");
@@ -40,9 +37,7 @@ size_t fwrite(const void *restrict ptr, size_t size, size_t nitems, FILE *restri
   return result;
 }
 
-/*
- * if buf is read from stdin and certain conditions are met change values of variables
- */
+// if buf is read from stdin and certain conditions are met change values of variables
 ssize_t read(int fd, void *buf, size_t count)
 {
   ssize_t (*original_read)() = (ssize_t (*)())dlsym(RTLD_NEXT, "read");
@@ -67,10 +62,8 @@ ssize_t read(int fd, void *buf, size_t count)
   return result;
 }
 
-/*
- * if is_bash and "lead=${COMP_LINE:0:$COMP_POINT}" is provided as arg
- * we can be sure that completion is printing
- */
+// if is_bash and "lead=${COMP_LINE:0:$COMP_POINT}" is provided as arg
+// we can be sure that completion is printing
 size_t strlen(const char *s)
 {
   size_t (*original_strlen)() = (size_t (*)())dlsym(RTLD_NEXT, "strlen");
@@ -82,10 +75,8 @@ size_t strlen(const char *s)
   return result;
 }
 
-/*
- * __printf_chk function is used in bulitins, for example by echo or dirs
- * __printf_chk is used also for printing possible completions
- */
+// __printf_chk function is used in bulitins, for example by echo or dirs
+// __printf_chk is used also for printing possible completions
 int __printf_chk(int flag, const char *restrict format, ...)
 {
   va_list args;
@@ -103,10 +94,8 @@ int __printf_chk(int flag, const char *restrict format, ...)
   return result;
 }
 
-/*
- * __fprintf_chk function is used in bulitins, for example by times.
- * __fprintf_chk is also used for displaying long completion question
- */
+// __fprintf_chk function is used in bulitins, for example by times.
+// __fprintf_chk is also used for displaying long completion question
 int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
 {
   va_list args;
@@ -133,10 +122,8 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
   return result;
 }
 
-/*
- * putc function is used in bulitins, for example by printf.
- * putc is also used for deleting characters next to prompt
- */
+// putc function is used in bulitins, for example by printf.
+// putc is also used for deleting characters next to prompt
 int putc(int c, FILE *stream)
 {
   int (*original_putc)() = (int (*)())dlsym(RTLD_NEXT, "putc");
@@ -149,9 +136,7 @@ int putc(int c, FILE *stream)
   return result;
 }
 
-/*
- * puts function is used in bulitins, for example by pwd
- */
+// puts function is used in bulitins, for example by pwd
 int puts(const char *s)
 {
   int (*original_puts)() = (int (*)())dlsym(RTLD_NEXT, "puts");
