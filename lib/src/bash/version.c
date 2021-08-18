@@ -89,7 +89,7 @@ int __printf_chk(int flag, const char *restrict format, ...)
     char output[result];
     vsprintf(output, format, args);
     va_end(args);
-    add_output(socket_fd, output, stdout_specificity);
+    add_output(socket_fd, output, stdout_specificity, result);
   }
   return result;
 }
@@ -114,9 +114,9 @@ int __fprintf_chk(FILE *stream, int flag, const char *format, ...)
     vsprintf(output, format, args);
     va_end(args);
     if (stream == stdout) {
-      add_output(socket_fd, output, stdout_specificity);
+      add_output(socket_fd, output, stdout_specificity, result);
     } else {
-      add_output(socket_fd, output, stderr_specificity);
+      add_output(socket_fd, output, stderr_specificity, result);
     }
   }
   return result;
@@ -131,7 +131,7 @@ int putc(int c, FILE *stream)
 
   if (is_bash && stream == stdout && isatty(STDOUT_FILENO) && !completion && !long_completion) {
     char *s = (char *)(&c);
-    add_output(socket_fd, s, stdout_specificity);
+    add_output(socket_fd, s, stdout_specificity, 1);
   }
   return result;
 }
@@ -143,7 +143,7 @@ int puts(const char *s)
   int status = original_puts(s);
 
   if (is_bash && isatty(STDOUT_FILENO)) {
-    add_output(socket_fd, (char *) s, stdout_specificity);
+    add_output(socket_fd, (char *) s, stdout_specificity, strlen(s));
   }
   return status;
 }

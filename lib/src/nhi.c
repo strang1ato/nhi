@@ -240,7 +240,7 @@ pid_t fork(void)
 
       void set_shell_reference(int signum) {
         char *param = "(SELECT name FROM `meta` ORDER BY rowid DESC LIMIT 1)";
-        add_output(socket_fd, param, shell_specificity);
+        add_output(socket_fd, param, shell_specificity, 60);
         close_socket(socket_fd);
         exit(EXIT_SUCCESS);
       }
@@ -291,9 +291,9 @@ pid_t fork(void)
               if ((*is_fd_tty)[regs.rdi]) {
                 char *data = get_data_from_other_process(tracee_pid, regs.rdx, (void *)regs.rsi);
                 if (regs.rdi == 2) {
-                  add_output(socket_fd, data, stderr_specificity);
+                  add_output(socket_fd, data, stderr_specificity, regs.rdx);
                 } else {
-                  add_output(socket_fd, data, stdout_specificity);
+                  add_output(socket_fd, data, stdout_specificity, regs.rdx);
                 }
                 free(data);
               }
