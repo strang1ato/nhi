@@ -17,7 +17,7 @@ func Log(tableName string) error {
 
 	// If tableName is not specified show list of all tables
 	if tableName == "" {
-		rows, err := db.Query("SELECT name FROM sqlite_schema WHERE type='table';")
+		rows, err := db.Query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY rowid DESC;")
 		if err != nil {
 			return err
 		}
