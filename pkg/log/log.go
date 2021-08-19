@@ -77,7 +77,7 @@ func Log(tableName string) error {
 		content.WriteString("\x1b[33m" + "indicator " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
 		content.WriteString("Start time:  " + startTime + "\n")
 		content.WriteString("Finish time: " + finishTime + "\n")
-		content.WriteString("\n    " + command + "\n")
+		content.WriteString("\n    " + command + "\n\n")
 	}
 
 	contentStr := content.String()
