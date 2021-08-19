@@ -159,7 +159,7 @@ __attribute__((constructor)) void init(void)
     }
 
     sprintf(prompter_pid_str, "%d", prompter_pid);
-    setenv("NHI_PROMPTER_PID", "", 1);  // Set var to empty string for now
+    setenv("NHI_PROMPTER_PID", prompter_pid_str, 1);
     setenv("NHI_CURRENT_SHELL_INDICATOR", table_name, 1);
   } else {
     sprintf(table_name, "%s", getenv("NHI_CURRENT_SHELL_INDICATOR"));
