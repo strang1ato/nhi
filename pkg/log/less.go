@@ -9,8 +9,7 @@ import (
 )
 
 // setupMemoryFile setups temporary RAM file which exists within program lifetime
-func setupMemoryFile(content string) (string, error) {
-	contentLen := len(content)
+func setupMemoryFile(content string, contentLen int) (string, error) {
 	fd, err := unix.MemfdCreate("nhiMemoryFile", 0)
 	if err != nil {
 		return "", err

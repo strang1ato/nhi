@@ -27,10 +27,19 @@ func Log(tableName string) error {
 			var tableName string
 			rows.Scan(&tableName)
 
+			if tableName == "" || tableName == "meta" {
+				continue
+			}
 			content.WriteString(tableName + "\n")
 		}
 
-		fp, err := setupMemoryFile(content.String())
+		contentStr := content.String()
+		contentStrLen := len(contentStr)
+		if contentStrLen == 0 {
+			return errors.New("no shell sessions to show")
+		}
+
+		fp, err := setupMemoryFile(contentStr, contentStrLen)
 		if err != nil {
 			return err
 		}
@@ -66,7 +75,13 @@ func Log(tableName string) error {
 		content.WriteString("\n    " + command + "\n")
 	}
 
-	fp, err := setupMemoryFile(content.String())
+	contentStr := content.String()
+	contentStrLen := len(contentStr)
+	if contentStrLen == 0 {
+		return errors.New("no commands where executed in this shell session")
+	}
+
+	fp, err := setupMemoryFile(contentStr, contentStrLen)
 	if err != nil {
 		return err
 	}
