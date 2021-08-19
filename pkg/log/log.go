@@ -17,20 +17,24 @@ func Log(tableName string) error {
 
 	// If tableName is not specified show list of all tables
 	if tableName == "" {
-		rows, err := db.Query("SELECT name FROM sqlite_schema WHERE type='table' ORDER BY rowid DESC;")
+		rows, err := db.Query("SELECT name, start_time, finish_time FROM meta ORDER BY rowid DESC;")
 		if err != nil {
 			return err
 		}
 
 		var content strings.Builder
 		for rows.Next() {
-			var tableName string
-			rows.Scan(&tableName)
+			var tableName,
+				startTime, finishTime string
+			rows.Scan(&tableName, &startTime, &finishTime)
 
 			if tableName == "" || tableName == "meta" {
 				continue
 			}
-			content.WriteString(tableName + "\n")
+
+			content.WriteString("\x1b[33m" + "Session name: " + tableName + "\x1b[0m" + "\n")
+			content.WriteString("Start time:  " + startTime + "\n")
+			content.WriteString("Finish time: " + finishTime + "\n\n")
 		}
 
 		contentStr := content.String()
@@ -69,6 +73,7 @@ func Log(tableName string) error {
 		if command == "" {
 			continue
 		}
+
 		content.WriteString("\x1b[33m" + "indicator " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
 		content.WriteString("Start time:  " + startTime + "\n")
 		content.WriteString("Finish time: " + finishTime + "\n")
