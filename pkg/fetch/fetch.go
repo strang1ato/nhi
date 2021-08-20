@@ -98,7 +98,7 @@ func Fetch(tableName, startEndRange string) error {
 			continue
 		}
 		fmt.Print("PS1 ")
-		fmt.Print(command)
+		fmt.Println(command)
 
 		var stdoutOutput, stderrOutput []byte
 		var writeStdout bool
