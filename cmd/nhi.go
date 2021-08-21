@@ -11,11 +11,11 @@ import (
 // Declare cli variable used by kong
 var cli struct {
 	Log struct {
-		TableName string `arg optional name:"session-name"`
-	} `cmd help:"Show command logs"`
+		Session string `arg optional name:"session"`
+	} `cmd help:"Show logs"`
 
 	Fetch struct {
-		TableName     string `arg required name:"session-name"`
+		Session     string `arg required name:"session"`
 		StartEndRange string `arg optional name:"start:end"`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 }
@@ -28,17 +28,17 @@ func Run() error {
 		if err := log.Log(""); err != nil {
 			return err
 		}
-	case "log <session-name>":
-		if err := log.Log(cli.Log.TableName); err != nil {
+	case "log <session>":
+		if err := log.Log(cli.Log.Session); err != nil {
 			return err
 		}
 
-	case "fetch <session-name>":
-		if err := fetch.Fetch(cli.Fetch.TableName, ":"); err != nil {
+	case "fetch <session>":
+		if err := fetch.Fetch(cli.Fetch.Session, ":"); err != nil {
 			return err
 		}
-	case "fetch <session-name> <start:end>":
-		if err := fetch.Fetch(cli.Fetch.TableName, cli.Fetch.StartEndRange); err != nil {
+	case "fetch <session> <start:end>":
+		if err := fetch.Fetch(cli.Fetch.Session, cli.Fetch.StartEndRange); err != nil {
 			return err
 		}
 	default:

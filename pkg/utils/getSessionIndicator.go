@@ -7,15 +7,15 @@ import (
 	"strconv"
 )
 
-// GetSessionIndicator gets indicator based on session name
-func GetSessionIndicator(db *sql.DB, name string) (string, error) {
-	name = strings.TrimPrefix(name, "[")
-	name = strings.TrimSuffix(name, "]")
+// GetSessionIndicator gets indicator
+func GetSessionIndicator(db *sql.DB, session string) (string, error) {
+	session = strings.TrimPrefix(session, "[")
+	session = strings.TrimSuffix(session, "]")
 
 	var query string
-	index, err := strconv.Atoi(name)
+	index, err := strconv.Atoi(session)
 	if err != nil || index > 1000000000 {
-		query = "SELECT indicator FROM `meta` WHERE name = '" + name + "';"
+		query = "SELECT indicator FROM `meta` WHERE name = '" + session + "';"
 	} else {
 		if index < 0 {
 			query = "SELECT indicator FROM `meta` WHERE rowid = (SELECT max(rowid)+" + strconv.Itoa(index+1) + " FROM `meta`);"

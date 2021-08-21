@@ -11,7 +11,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(tableName, startEndRange string) error {
+func Fetch(session, startEndRange string) error {
 	db, err := sqlite.OpenDb()
 	if err != nil {
 		return err
@@ -44,47 +44,47 @@ func Fetch(tableName, startEndRange string) error {
 		if intStartRange < 0 && intEndRange < 0 {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				tableName, sliceStartEndRange[0], tableName, sliceStartEndRange[1], tableName)
+				session, sliceStartEndRange[0], session, sliceStartEndRange[1], session)
 		} else if intStartRange < 0 {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
-				tableName, sliceStartEndRange[0], tableName, sliceStartEndRange[1])
+				session, sliceStartEndRange[0], session, sliceStartEndRange[1])
 		} else if intEndRange < 0 {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				tableName, sliceStartEndRange[0], sliceStartEndRange[1], tableName)
+				session, sliceStartEndRange[0], sliceStartEndRange[1], session)
 		} else {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE rowid > %s AND rowid <= %s;",
-				tableName, sliceStartEndRange[0], sliceStartEndRange[1])
+				session, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else if intStartRange < billion {
 		if intStartRange < 0 {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
-				tableName, sliceStartEndRange[0], tableName, sliceStartEndRange[1])
+				session, sliceStartEndRange[0], session, sliceStartEndRange[1])
 		} else {
 			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
-				tableName, sliceStartEndRange[0], sliceStartEndRange[1])
+			session, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else if intEndRange < billion {
 		if intEndRange < 0 {
 			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
 				"WHERE indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				tableName, sliceStartEndRange[0], sliceStartEndRange[1], tableName)
+				session, sliceStartEndRange[0], sliceStartEndRange[1], session)
 		} else {
 			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
-				tableName, sliceStartEndRange[0], sliceStartEndRange[1])
+			session, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else {
 		query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
-			tableName, sliceStartEndRange[0], sliceStartEndRange[1])
+		session, sliceStartEndRange[0], sliceStartEndRange[1])
 	}
 
 	rows, err := db.Query(query)
 	if err != nil {
-		if err.Error() == "no such table: "+tableName {
-			return errors.New("no such shell session: " + tableName)
+		if err.Error() == "no such table: "+session {
+			return errors.New("no such shell session: " + session)
 		}
 		return err
 	}

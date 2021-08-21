@@ -10,14 +10,14 @@ import (
 )
 
 // Log shows command logs using less program (in similar manner as git log does)
-func Log(name string) error {
+func Log(session string) error {
 	db, err := sqlite.OpenDb()
 	if err != nil {
 		return err
 	}
 
-	// If name is not specified show list of all tables
-	if name == "" {
+	// If session is not specified show list of all sessions
+	if session == "" {
 		rows, err := db.Query("SELECT name, start_time, finish_time FROM meta ORDER BY rowid DESC;")
 		if err != nil {
 			return err
@@ -55,7 +55,7 @@ func Log(name string) error {
 		return nil
 	}
 
-	indicator, err := utils.GetSessionIndicator(db, name)
+	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
 	}
