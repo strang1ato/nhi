@@ -5,13 +5,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/strang1ato/nhi/pkg/sqlite"
 	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Log shows command logs using less program (in similar manner as git log does)
 func Log(session string) error {
-	db, err := sqlite.OpenDb()
+	db, err := utils.OpenDb()
 	if err != nil {
 		return err
 	}

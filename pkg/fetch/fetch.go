@@ -7,12 +7,12 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/strang1ato/nhi/pkg/sqlite"
+	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Fetch retrieves shell session optionally with given range of commands
 func Fetch(session, startEndRange string) error {
-	db, err := sqlite.OpenDb()
+	db, err := utils.OpenDb()
 	if err != nil {
 		return err
 	}
