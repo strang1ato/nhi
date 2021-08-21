@@ -65,7 +65,7 @@ func Fetch(session, startEndRange string) error {
 				session, sliceStartEndRange[0], session, sliceStartEndRange[1])
 		} else {
 			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
-			session, sliceStartEndRange[0], sliceStartEndRange[1])
+				session, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else if intEndRange < billion {
 		if intEndRange < 0 {
@@ -74,11 +74,11 @@ func Fetch(session, startEndRange string) error {
 				session, sliceStartEndRange[0], sliceStartEndRange[1], session)
 		} else {
 			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
-			session, sliceStartEndRange[0], sliceStartEndRange[1])
+				session, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else {
 		query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
-		session, sliceStartEndRange[0], sliceStartEndRange[1])
+			session, sliceStartEndRange[0], sliceStartEndRange[1])
 	}
 
 	rows, err := db.Query(query)
