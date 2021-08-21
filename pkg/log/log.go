@@ -6,17 +6,18 @@ import (
 	"strings"
 
 	"github.com/strang1ato/nhi/pkg/sqlite"
+	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Log shows command logs using less program (in similar manner as git log does)
-func Log(tableName string) error {
+func Log(name string) error {
 	db, err := sqlite.OpenDb()
 	if err != nil {
 		return err
 	}
 
-	// If tableName is not specified show list of all tables
-	if tableName == "" {
+	// If name is not specified show list of all tables
+	if name == "" {
 		rows, err := db.Query("SELECT name, start_time, finish_time FROM meta ORDER BY rowid DESC;")
 		if err != nil {
 			return err
@@ -24,15 +25,15 @@ func Log(tableName string) error {
 
 		var content strings.Builder
 		for rows.Next() {
-			var tableName,
+			var name,
 				startTime, finishTime string
-			rows.Scan(&tableName, &startTime, &finishTime)
+			rows.Scan(&name, &startTime, &finishTime)
 
-			if tableName == "" || tableName == "meta" {
+			if name == "" || name == "meta" {
 				continue
 			}
 
-			content.WriteString("\x1b[33m" + "Session name: " + tableName + "\x1b[0m" + "\n")
+			content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
 			content.WriteString("Start time:  " + startTime + "\n")
 			content.WriteString("Finish time: " + finishTime + "\n\n")
 		}
@@ -54,11 +55,16 @@ func Log(tableName string) error {
 		return nil
 	}
 
-	query := "SELECT indicator, start_time, finish_time, command FROM `" + tableName + "` ORDER BY rowid DESC;"
+	indicator, err := utils.GetSessionIndicator(db, name)
+	if err != nil {
+		return err
+	}
+
+	query := "SELECT indicator, start_time, finish_time, command FROM `" + indicator + "` ORDER BY rowid DESC;"
 	rows, err := db.Query(query)
 	if err != nil {
-		if err.Error() == "no such table: "+tableName {
-			return errors.New("no such shell session: " + tableName)
+		if err.Error() == "no such table: "+indicator {
+			return errors.New("no such shell session: " + indicator)
 		}
 		return err
 	}
