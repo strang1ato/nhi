@@ -5,16 +5,13 @@ import (
 	"strconv"
 	"strings"
 
+	"database/sql"
+
 	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Log shows command logs using less program (in similar manner as git log does)
-func Log(session string) error {
-	db, err := utils.OpenDb()
-	if err != nil {
-		return err
-	}
-
+func Log(db *sql.DB, session string) error {
 	// If session is not specified show list of all sessions
 	if session == "" {
 		rows, err := db.Query("SELECT name, start_time, finish_time FROM meta ORDER BY rowid DESC;")

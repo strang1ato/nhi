@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/strang1ato/nhi/pkg/fetch"
 	"github.com/strang1ato/nhi/pkg/log"
+	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Declare cli variable used by kong
@@ -22,27 +23,29 @@ var cli struct {
 
 // Run runs nhi
 func Run() error {
+	db, err := utils.OpenDb()
+	if err != nil {
+		return err
+	}
+
 	ctx := kong.Parse(&cli)
 	switch ctx.Command() {
 	case "log":
-		if err := log.Log(""); err != nil {
-			return err
-		}
+		err = log.Log(db, "")
 	case "log <session>":
-		if err := log.Log(cli.Log.Session); err != nil {
-			return err
-		}
-
+		err = log.Log(db, cli.Log.Session)
 	case "fetch <session>":
-		if err := fetch.Fetch(cli.Fetch.Session, ":"); err != nil {
-			return err
-		}
+		err = fetch.Fetch(db, cli.Fetch.Session, ":")
 	case "fetch <session> <start:end>":
-		if err := fetch.Fetch(cli.Fetch.Session, cli.Fetch.StartEndRange); err != nil {
-			return err
-		}
+		err = fetch.Fetch(db, cli.Fetch.Session, cli.Fetch.StartEndRange)
 	default:
-		return errors.New("Command not found")
+		err = errors.New("Command not found")
 	}
-	return nil
+
+	if err == nil {
+		err = db.Close()
+	} else {
+		db.Close()
+	}
+	return err
 }

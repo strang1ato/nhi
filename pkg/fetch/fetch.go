@@ -7,16 +7,11 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/strang1ato/nhi/pkg/utils"
+	"database/sql"
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(session, startEndRange string) error {
-	db, err := utils.OpenDb()
-	if err != nil {
-		return err
-	}
-
+func Fetch(db *sql.DB, session, startEndRange string) error {
 	startEndRange = strings.TrimPrefix(startEndRange, "[")
 	startEndRange = strings.TrimSuffix(startEndRange, "]")
 
@@ -122,7 +117,7 @@ func Fetch(session, startEndRange string) error {
 					stderrOutput = nil
 				}
 			} else if character == 253 {
-				if err := Fetch(string(output[i+1:i+11]), ":"); err != nil {
+				if err := Fetch(db, string(output[i+1:i+11]), ":"); err != nil {
 					return err
 				}
 				copy(output[i+1:i+11], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
