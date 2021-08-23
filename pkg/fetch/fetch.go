@@ -44,42 +44,42 @@ func Fetch(db *sql.DB, session, startEndRange string) error {
 	var query string
 	if intStartRange < billion && intEndRange < billion {
 		if intStartRange < 0 && intEndRange < 0 {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
 		} else if intStartRange < 0 {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
 				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
 		} else if intEndRange < 0 {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
 		} else {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE rowid > %s AND rowid <= %s;",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else if intStartRange < billion {
 		if intStartRange < 0 {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
 				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
 		} else {
-			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else if intEndRange < billion {
 		if intEndRange < 0 {
-			query = fmt.Sprintf("SELECT command, output FROM `%s`"+
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
 				"WHERE indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
 		} else {
-			query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else {
-		query = fmt.Sprintf("SELECT command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
+		query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
 			indicator, sliceStartEndRange[0], sliceStartEndRange[1])
 	}
 
@@ -92,14 +92,14 @@ func Fetch(db *sql.DB, session, startEndRange string) error {
 	}
 
 	for rows.Next() {
-		var command string
+		var PS1, command string
 		var output []byte
-		rows.Scan(&command, &output)
+		rows.Scan(&PS1, &command, &output)
 
 		if command == "" {
 			continue
 		}
-		fmt.Print("PS1 ")
+		fmt.Print(PS1)
 		fmt.Println(command)
 
 		var stdoutOutput, stderrOutput []byte
