@@ -31,5 +31,6 @@ func GetSessionIndicator(db *sql.DB, session string) (string, error) {
 	rows.Next()
 	var indicator int
 	rows.Scan(&indicator)
+	rows.Close()
 	return strconv.Itoa(indicator), nil
 }

@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/strang1ato/nhi/pkg/fetch"
 	"github.com/strang1ato/nhi/pkg/log"
+	"github.com/strang1ato/nhi/pkg/rename"
 	"github.com/strang1ato/nhi/pkg/utils"
 )
 
@@ -19,6 +20,11 @@ var cli struct {
 		Session       string `arg required name:"session"`
 		StartEndRange string `arg optional name:"start:end"`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
+
+	Rename struct {
+		Session       string `arg required name:"session"`
+		NewName string `arg required name:"new-name"`
+	} `cmd help:"Rename shell session"`
 }
 
 // Run runs nhi
@@ -38,6 +44,8 @@ func Run() error {
 		err = fetch.Fetch(db, cli.Fetch.Session, ":")
 	case "fetch <session> <start:end>":
 		err = fetch.Fetch(db, cli.Fetch.Session, cli.Fetch.StartEndRange)
+	case "rename <session> <new-name>":
+		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)
 	default:
 		err = errors.New("Command not found")
 	}
