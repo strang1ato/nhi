@@ -22,7 +22,7 @@ var cli struct {
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 
 	Rename struct {
-		Session       string `arg required name:"session"`
+		Session string `arg required name:"session"`
 		NewName string `arg required name:"new-name"`
 	} `cmd help:"Rename shell session"`
 }
