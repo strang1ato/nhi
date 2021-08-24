@@ -18,4 +18,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
     COMMAND_RAN=0
   }
   declare PROMPT_COMMAND="prompter"
+
+  alias echo='/bin/echo'
+  alias pwd='echo $PWD'
 fi
