@@ -19,6 +19,10 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
   }
   declare PROMPT_COMMAND="prompter"
 
-  alias echo='/bin/echo'
-  alias pwd='echo $PWD'
+  function echo() {
+    /bin/echo "$@"
+  }
+  function pwd() {
+    echo "$(command pwd $@)"
+  }
 fi
