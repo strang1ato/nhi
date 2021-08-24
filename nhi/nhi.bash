@@ -23,9 +23,9 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
     /bin/echo "$@"
   }
   function pwd() {
-    echo "$(command pwd $@)"
+    echo "$(command pwd $@ 2>&1)"
   }
   function help() {
-    echo "$(command help $@)"
+    echo "$(command help $@ 2>&1)"
   }
 fi
