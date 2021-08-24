@@ -8,7 +8,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
   trap 'COMMAND_RAN=$((COMMAND_RAN+1))' DEBUG
 
   function prompter() {
-    export NHI_PS1=$(echo "${PS1@P}")
+    export NHI_PS1="${PS1@P}"
     if [[ $COMMAND_RAN > 1 && "$RAN_FIRST_TIME" == "true" ]]; then
       export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1)
       /home/karol/projects/nhi/nhi/nhi-prompter-trick
