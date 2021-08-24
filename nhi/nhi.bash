@@ -25,4 +25,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
   function pwd() {
     echo "$(command pwd $@)"
   }
+  function help() {
+    echo "$(command help $@)"
+  }
 fi
