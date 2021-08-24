@@ -22,6 +22,13 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
   function echo() {
     /bin/echo "$@"
   }
+  function printf() {
+    if [[ "$1" == "-v" ]]; then
+      command printf $@
+    else
+      echo "$(command printf $@ 2>&1)"
+    fi
+  }
   function pwd() {
     echo "$(command pwd $@ 2>&1)"
   }
