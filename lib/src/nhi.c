@@ -1,6 +1,7 @@
 #include "sqlite_queue_client.h"
 
 #include <ctype.h>
+#include <dirent.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <semaphore.h>
@@ -230,10 +231,18 @@ pid_t fork(void)
 
     pid_t tracer_pid = original_fork();
     if (!tracer_pid) {
-      // Close all inherited file descriptors (except 0, 1, 2).
-      // 1024 is default maximum number of fds that can be opened by process in linux.
-      for (int i = 3; i < 1024; i++) {
-        close(i);
+      pid_t pid = getpid();
+      {
+        struct dirent *dir;
+        char path[16];
+        sprintf(path, "%s%d%s", "/proc/", pid, "/fd");
+        DIR *stream = opendir(path);
+        readdir(stream);  // omit "." file
+        readdir(stream);  // omit ".." file
+        while ((dir = readdir(stream)) != NULL) {
+          close(atoi(dir->d_name));
+        }
+        closedir(stream);
       }
 
       int socket_fd = connect_to_socket();
@@ -248,12 +257,13 @@ pid_t fork(void)
       }
       signal(SIGUSR1, set_shell_reference);
 
-      pid_t pid = getpid();
-      char path[18];
-      sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
-      FILE *stream = fopen(path, "w");
-      fputs("nhi-tracer", stream);
-      fclose(stream);
+      {
+        char path[18];
+        sprintf(path, "%s%d%s", "/proc/", pid, "/comm");
+        FILE *stream = fopen(path, "w");
+        fputs("nhi-tracer", stream);
+        fclose(stream);
+      }
 
       pid_t tracee_pid = getppid();
 
