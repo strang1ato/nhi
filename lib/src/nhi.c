@@ -127,9 +127,9 @@ __attribute__((constructor)) void init(void)
           last_executed_command = "history does not work";
         }
 
-        int i = 1;
+        int i = 2;
         while(1) {
-          if (last_executed_command[i] >= 48 && last_executed_command[i] <= 57) {
+          if (last_executed_command[i] >= 48 && last_executed_command[i] <= 57) {  // 48-57 is range of numbers 0-9 in ASCII
             i++;
           } else {
             i+=2;
