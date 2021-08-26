@@ -1,18 +1,18 @@
 if [[ -n "$NHI_PROMPTER_PID" ]]; then
-  declare -i COMMAND_RAN=0
-  RAN_FIRST_TIME="false"
+  declare -i command_ran=0
+  ran_first_time="false"
 
-  trap 'COMMAND_RAN=$((COMMAND_RAN+1))' DEBUG
+  trap 'command_ran=$((command_ran+1))' DEBUG
 
   function prompter() {
     export NHI_PS1="${PS1@P}"
-    if [[ $COMMAND_RAN > 1 && "$RAN_FIRST_TIME" == "true" ]]; then
+    if [[ $command_ran > 1 && "$ran_first_time" == "true" ]]; then
       export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1)
       /home/karol/projects/nhi/nhi/nhi-prompter-trick
       kill -s SIGUSR1 $NHI_PROMPTER_PID
     fi
-    RAN_FIRST_TIME="true"
-    COMMAND_RAN=0
+    ran_first_time="true"
+    command_ran=0
   }
   declare PROMPT_COMMAND="prompter"
 
