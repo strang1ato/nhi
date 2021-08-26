@@ -55,7 +55,9 @@ int connect_to_socket(void)
   struct sockaddr_un socket_address;
   socket_address.sun_family = AF_UNIX;
   strcpy(socket_address.sun_path, "/tmp/sqlite-queue.socket");
-  connect(socket_fd, (const struct sockaddr *) &socket_address, sizeof(socket_address));
+  if (connect(socket_fd, (const struct sockaddr *) &socket_address, sizeof(socket_address)) == -1) {
+    dprintf(2, "Can not connect to sqlite-queue socket\n");
+  }
   return socket_fd;
 }
 

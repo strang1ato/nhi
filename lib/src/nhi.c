@@ -254,10 +254,11 @@ pid_t fork(void)
         char path[16];
         sprintf(path, "%s%d%s", "/proc/", pid, "/fd");
         DIR *stream = opendir(path);
-        readdir(stream);  // omit "." file
-        readdir(stream);  // omit ".." file
         while ((dir = readdir(stream)) != NULL) {
-          close(atoi(dir->d_name));
+          int dir_name_int = atoi(dir->d_name);
+          if (!(!dir_name_int || dir_name_int == 1 || dir_name_int == 2)) {
+            close(atoi(dir->d_name));
+          }
         }
         closedir(stream);
       }
