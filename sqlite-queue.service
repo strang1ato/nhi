@@ -4,7 +4,7 @@ Description=sqlite-queue connected to nhi db
 [Service]
 Type=simple
 Restart=always
-ExecStart=/usr/bin/env sqlite-queue ${HOME}/.nhi/db
+ExecStart=sqlite-queue ${HOME}/.nhi/db
 
 [Install]
 WantedBy=default.target
