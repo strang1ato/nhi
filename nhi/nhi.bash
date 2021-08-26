@@ -1,7 +1,4 @@
 if [[ -n "$NHI_PROMPTER_PID" ]]; then
-  export NHI_LOG_PATH="/home/karol/projects/nhi/test.log"
-  export NHI_DB_PATH="/home/karol/projects/nhi/test.db"
-
   declare -i COMMAND_RAN=0
   RAN_FIRST_TIME="false"
 
