@@ -10,12 +10,12 @@ import (
 
 // OpenDb opens nhi database
 func OpenDb() (*sql.DB, error) {
-	dbPath := os.Getenv("NHI_DB_PATH")
-	if dbPath == "" {
-		return nil, errors.New("NHI_DB_PATH environmental variable is not set")
+	home := os.Getenv("HOME")
+	if home == "" {
+		return nil, errors.New("HOME environmental variable is not set")
 	}
 
-	db, err := sql.Open("sqlite3", dbPath)
+	db, err := sql.Open("sqlite3", home+"/.nhi/db")
 	if err != nil {
 		return nil, err
 	}
