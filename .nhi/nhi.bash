@@ -8,7 +8,7 @@ if [[ -n "$NHI_PROMPTER_PID" ]]; then
     export NHI_PS1="${PS1@P}"
     if [[ $command_ran > 1 && "$ran_first_time" == "true" ]]; then
       export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1)
-      /home/karol/projects/nhi/nhi/nhi-prompter-trick
+      ~/.nhi/prompter-trick
       kill -s SIGUSR1 $NHI_PROMPTER_PID
     fi
     ran_first_time="true"
