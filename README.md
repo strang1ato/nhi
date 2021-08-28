@@ -82,7 +82,7 @@ Make sure that you have `make`, `sqlite3` and `libsqlite3-dev` installed (exampl
   sudo apt-get install build-essential sqlite3 libsqlite3-dev
 ```
 
-Unzip downloaded source code
+`unzip` downloaded source code
 
 `cd` to source code and run:
 ```bash
