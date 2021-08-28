@@ -82,7 +82,9 @@ Make sure that you have `make`, `sqlite3` and `libsqlite3-dev` installed (exampl
   sudo apt-get install build-essential sqlite3 libsqlite3-dev
 ```
 
-`cd` to downloaded source code and run:
+Unzip downloaded source code
+
+`cd` to source code and run:
 ```bash
   make copy-.nhi && make create-db && make install-sqlite-queue-service && make start-sqlite-queue-service
 ```
