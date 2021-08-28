@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 export LD_PRELOAD="/usr/lib/nhi.so" && \
 bash
