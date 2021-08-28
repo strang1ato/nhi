@@ -57,9 +57,9 @@ Next run:
 If you didn't get any errors, set `bash-nhi` to your shell in your terminal and restart terminal.
 
 
-#### x86_64 binaries
+#### Binaries
 
-If your architecture is `x86_64` then feel free to download latest binaries from [releases](https://github.com/strang1ato/nhi/releases)
+Download latest files from [releases](https://github.com/strang1ato/nhi/releases)
 
 But first of all install [sqlite-queue](https://github.com/strang1ato/sqlite-queue) following [this guide](https://github.com/strang1ato/sqlite-queue#installation)
 
