@@ -66,6 +66,7 @@ But first of all install [sqlite-queue](https://github.com/strang1ato/sqlite-que
 Make files executable:
 ```bash
   sudo chmod +x <path-to-bash-nhi>
+  sudo chmod +x <path-to-nhi.so>
   sudo chmod +x <path-to-nhi>
 ```
 
