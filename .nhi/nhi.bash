@@ -1,4 +1,10 @@
 if [[ -n "$NHI_PROMPTER_PID" ]]; then
+  if [[ "$HISTCONTROL" == "ignoreboth" || "$HISTCONTROL" == "ignoredups:ignorespace" || "$HISTCONTROL" == "ignorespace:ignoredups" ]]; then
+    HISTCONTROL="ignoredups"
+  else
+    HISTCONTROL=""
+  fi
+
   declare -i command_ran=0
   ran_first_time="false"
 
