@@ -26,6 +26,8 @@ You can think of `nhi` as a greatly enhanced `bash history`
 
 `bash 4.4+`, `systemd` and not archaic `linux` kernel
 
+Content of `/proc/sys/kernel/yama/ptrace_scope` file has to be `0` (however in the future `nhi` will support `1` as well)
+
 ### Installation
 
 #### From source
