@@ -77,6 +77,11 @@ Move files to proper directories:
   sudo mv <path-to-nhi> /usr/local/bin
 ```
 
+Make sure that you have `make`, `sqlite3` and `libsqlite3-dev` installed (example for debian/ubuntu):
+```bash
+  sudo apt-get install build-essential sqlite3 libsqlite3-dev
+```
+
 `cd` to downloaded source code and run:
 ```bash
   make copy-.nhi && make create-db && make install-sqlite-queue-service && make start-sqlite-queue-service
