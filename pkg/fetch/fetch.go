@@ -19,8 +19,8 @@ func Fetch(db *sql.DB, session, startEndRange string) error {
 		return err
 	}
 
-	startEndRange = strings.TrimPrefix(startEndRange, "[")
-	startEndRange = strings.TrimSuffix(startEndRange, "]")
+	startEndRange = strings.TrimPrefix(startEndRange, "}")
+	startEndRange = strings.TrimSuffix(startEndRange, "{")
 
 	sliceStartEndRange := strings.SplitN(startEndRange, ":", 2)
 

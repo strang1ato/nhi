@@ -9,8 +9,8 @@ import (
 
 // GetSessionIndicator gets indicator
 func GetSessionIndicator(db *sql.DB, session string) (string, error) {
-	session = strings.TrimPrefix(session, "[")
-	session = strings.TrimSuffix(session, "]")
+	session = strings.TrimPrefix(session, "{")
+	session = strings.TrimSuffix(session, "}")
 
 	var query string
 	index, err := strconv.Atoi(session)

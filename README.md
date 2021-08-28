@@ -58,6 +58,6 @@ If you didn't get any errors, set `bash-nhi` to your shell in your terminal and 
 
 You can test if `nhi` installed correctly by running any command in your terminal, and later, in the same session running:
 ```bash
-  nhi fetch [-1]
+  nhi fetch {-1}
 ```
 If your shell session "duplicated" then you have installed `nhi` correctly
