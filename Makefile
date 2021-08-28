@@ -27,6 +27,6 @@ start-sqlite-queue-service:
 	systemctl --user start sqlite-queue.service
 
 install:
-	cp nhi /usr/local/bin
 	cp bash-nhi /usr/local/bin
 	cp lib/nhi.so /usr/lib
+	cp nhi /usr/local/bin

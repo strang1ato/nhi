@@ -56,7 +56,36 @@ Next run:
 
 If you didn't get any errors, set `bash-nhi` to your shell in your terminal and restart terminal.
 
-You can test if `nhi` installed correctly by running any command in your terminal, and later, in the same session running:
+
+#### x86_64 binaries
+
+If your architecture is `x86_64` then feel free to download latest binaries from [releases](https://github.com/strang1ato/nhi/releases)
+
+But first of all install [sqlite-queue](https://github.com/strang1ato/sqlite-queue) following [this guide](https://github.com/strang1ato/sqlite-queue#installation)
+
+Make files executable:
+```bash
+  sudo chmod +x <path-to-bash-nhi>
+  sudo chmod +x <path-to-nhi>
+```
+
+Move files to proper directories:
+```bash
+  sudo mv <path-to-bash-nhi> /usr/local/bin
+  sudo mv <path-to-nhi.so> /usr/lib
+  sudo mv <path-to-nhi> /usr/local/bin
+```
+
+Install and start `sqlite-queue.service`:
+```bash
+  mkdir -p ~/.local/share/systemd/user
+  mv <path-to-sqlite-queue.service> ~/.local/share/systemd/user
+  systemctl --user enable sqlite-queue.service
+  systemctl --user start sqlite-queue.service
+```
+
+
+That's it, you can test if `nhi` installed correctly by running any command in your terminal, and later, in the same session running:
 ```bash
   nhi fetch {-1}
 ```
