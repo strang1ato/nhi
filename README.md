@@ -18,7 +18,7 @@ and delivers powerful querying mechanism
 These features allow retriving of past executed commands and whole shell sessions
 as well as every other useful information in convenient way
 
-You can think of `nhi` as a greatly enhanced `bash` `history`
+You can think of `nhi` as a greatly enhanced `bash history`
 
 `nhi` currently supports only `linux x86_64` and `bash`, but support for other architectures and `zsh` is planned as well
 
