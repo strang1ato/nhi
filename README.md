@@ -54,6 +54,8 @@ Next run:
   sudo make install
 ```
 
+Add `source ~/.nhi/nhi.bash` to the end of your `.bashrc`
+
 If you didn't get any errors, set `bash-nhi` to your shell in your terminal and restart terminal.
 
 
@@ -88,6 +90,8 @@ Make sure that you have `make`, `sqlite3` and `libsqlite3-dev` installed (exampl
 ```bash
   make copy-.nhi && make create-db && make install-sqlite-queue-service && make start-sqlite-queue-service
 ```
+
+Add `source ~/.nhi/nhi.bash` to the end of your `.bashrc`
 
 If you didn't get any errors, set `bash-nhi` to your shell in your terminal and restart terminal.
 
