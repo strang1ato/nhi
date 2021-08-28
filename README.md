@@ -15,7 +15,7 @@ and delivers powerful querying mechanism
 
 `nhi` also keeps record of infomations about shell session in general
 
-These features allow retriving of past executed commands and whole shell sessions
+These features allow retrievement of past executed commands and whole shell sessions
 as well as every other useful information in convenient way
 
 You can think of `nhi` as a greatly enhanced `bash history`
@@ -24,7 +24,7 @@ You can think of `nhi` as a greatly enhanced `bash history`
 
 ### Requirements
 
-`bash 4.4+`, `systemd` and non-archaic `linux` kernel
+`bash 4.4+`, `systemd` and not archaic `linux` kernel
 
 ### Installation
 
