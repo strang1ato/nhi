@@ -84,6 +84,7 @@ Install and start `sqlite-queue.service`:
   systemctl --user start sqlite-queue.service
 ```
 
+#### Testing
 
 That's it, you can test if `nhi` installed correctly by running any command in your terminal, and later, in the same session running:
 ```bash
