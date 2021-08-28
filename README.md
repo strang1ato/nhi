@@ -59,7 +59,7 @@ If you didn't get any errors, set `bash-nhi` to your shell in your terminal and 
 
 #### Binaries
 
-Download latest files from [releases](https://github.com/strang1ato/nhi/releases)
+Download latest files and source code from [releases](https://github.com/strang1ato/nhi/releases)
 
 But first of all install [sqlite-queue](https://github.com/strang1ato/sqlite-queue) following [this guide](https://github.com/strang1ato/sqlite-queue#installation)
 
@@ -76,12 +76,9 @@ Move files to proper directories:
   sudo mv <path-to-nhi> /usr/local/bin
 ```
 
-Install and start `sqlite-queue.service`:
+`cd` to downloaded source code and run:
 ```bash
-  mkdir -p ~/.local/share/systemd/user
-  mv <path-to-sqlite-queue.service> ~/.local/share/systemd/user
-  systemctl --user enable sqlite-queue.service
-  systemctl --user start sqlite-queue.service
+  make copy-.nhi && make create-db && make install-sqlite-queue-service && make start-sqlite-queue-service
 ```
 
 If you didn't get any errors, set `bash-nhi` to your shell in your terminal and restart terminal.
