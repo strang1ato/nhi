@@ -406,11 +406,13 @@ pid_t fork(void)
 
 int execve(const char *pathname, char *const argv[], char *const envp[])
 {
-  if (isatty(STDOUT_FILENO)) {
-    (*is_fd_tty)[STDOUT_FILENO] = true;
-  }
-  if (isatty(STDERR_FILENO)) {
-    (*is_fd_tty)[STDERR_FILENO] = true;
+  if (is_terminal_setup || !is_bash) {
+    if (isatty(STDOUT_FILENO)) {
+      (*is_fd_tty)[STDOUT_FILENO] = true;
+    }
+    if (isatty(STDERR_FILENO)) {
+      (*is_fd_tty)[STDERR_FILENO] = true;
+    }
   }
 
   int (*original_execve)() = (int (*)())dlsym(RTLD_NEXT, "execve");
