@@ -1,5 +1,8 @@
-build-lib:
-	cd lib/src/ && gcc nhi.c sqlite_queue_client.c -D_GNU_SOURCE -Wall -fPIC -ldl -pthread -lsqlite3 -shared -o ../nhi.so
+build-daemon:
+	clang -Wall -g -O2 -target bpf -D__TARGET_ARCH_x86 -c daemon/src/nhi.bpf.c -o nhi.bpf.o
+	clang -Wall -c daemon/src/nhi.c -o nhi.o
+	clang -Wall -c daemon/src/sqlite.c -o sqlite.o
+	clang -Wall nhi.o sqlite.o -l:libbpf.a -lelf -lz -lsqlite3 -o nhid
 
 build-cli:
 	go build -o nhi main.go

@@ -1,6 +1,13 @@
+nhid
+nhi.o
+sqlite.o
+nhi.bpf.o
+
 nhi
+
 test.db
 test.log
+
 *.orig
 *.so
 *.swp
