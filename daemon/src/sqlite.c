@@ -29,6 +29,7 @@ sqlite3 *open_db(void)
   char *db_path = "/home/karol/.nhi/db";
   if (sqlite3_open(db_path, &db) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
+    return 0;
   }
   return db;
 }

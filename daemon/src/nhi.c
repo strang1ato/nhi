@@ -298,6 +298,9 @@ __attribute__((destructor)) void destroy(void)
 int main()
 {
   db = open_db();
+  if (!db) {
+    return 0;
+  }
 
   bpf_object = bpf_object__open_file("nhi.bpf.o", 0);
   if (libbpf_get_error(bpf_object)) {
