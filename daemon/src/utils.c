@@ -13,7 +13,7 @@ int write_log(const char *message)
   int fd = open("/tmp/nhi.log", O_RDWR|O_APPEND|O_CREAT, "a");
   dprintf(fd, "%s | %s\n", get_date(), message);
   close(fd);
-  return EXIT_SUCCESS;
+  return 0;
 }
 
 char *get_date(void)
