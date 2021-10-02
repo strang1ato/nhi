@@ -286,7 +286,7 @@ void handle_shell_exit(struct exit_shell_indicator_event *exit_shell_indicator_e
 
 void handle_write(struct write_event *write_event, size_t data_sz)
 {
-  add_output(db, write_event->indicator, write_event->output);
+  add_output(db, write_event->indicator, write_event->output, data_sz-sizeof(long)-1);
 }
 
 __attribute__((destructor)) void destroy(void)

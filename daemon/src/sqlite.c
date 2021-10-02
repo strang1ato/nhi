@@ -14,7 +14,7 @@ void create_row(sqlite3 *, long);
 
 void add_PS1(sqlite3 *, long, const void *);
 void add_command(sqlite3 *, long, const void *);
-void add_output(sqlite3 *, long, const void *);
+void add_output(sqlite3 *, long, const void *, size_t);
 void add_pwd(sqlite3 *, long, const void *);
 void add_start_time(sqlite3 *, long);
 void add_finish_time(sqlite3 *, long);
@@ -110,7 +110,7 @@ void add_command(sqlite3 *db, long indicator, const void *command)
   sqlite3_finalize(stmt);
 }
 
-void add_output(sqlite3 *db, long indicator, const void *data)
+void add_output(sqlite3 *db, long indicator, const void *output, size_t output_len)
 {
   char query[100];
   sprintf(query, "%s%ld%s%ld%s",
@@ -120,7 +120,7 @@ void add_output(sqlite3 *db, long indicator, const void *data)
     write_log(sqlite3_errmsg(db));
   }
 
-  if (sqlite3_bind_blob(stmt, 1, data, strlen(data), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_blob(stmt, 1, output, output_len, NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 

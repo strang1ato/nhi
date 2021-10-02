@@ -309,7 +309,7 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     return 0;
   }
 
-  if (count <= KSYS_WRITE_EVENT_SIZE-sizeof(long)) {
+  if (count <= KSYS_WRITE_EVENT_SIZE-sizeof(long)-1) {
     int zero = 0;
     struct write_event *write_event;
     write_event = bpf_map_lookup_elem(&ksys_write_event, &zero);
@@ -322,11 +322,7 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
       bpf_probe_read_user(write_event->output, count, buf);
     }
 
-    if (count < 3) {
-      count = 3;  // just to make size unique
-    }
-
-    bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long), 0);
+    bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long)+1, 0);
   }
   return 0;
 }
