@@ -28,7 +28,6 @@ void handle_kill_SIGUSR1(struct kill_event *);
 long create_indicator(void);
 char ***get_shell_environ_address(pid_t);
 char **get_shell_environ(pid_t, char ***);
-char *get_shell_environ_var(char **, char *);
 void handle_kill_SIGUSR2(struct kill_event *, size_t);
 void handle_child_creation(pid_t *);
 void handle_shell_exit(struct exit_shell_indicator_event *);
