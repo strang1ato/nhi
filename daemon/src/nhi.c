@@ -16,10 +16,10 @@
 #include <unistd.h>
 
 sqlite3 *db;
+
 struct bpf_object *bpf_object;
 
-int shell_pids_fd;
-int child_pids_fd;
+int shell_pids_and_indicators_fd;
 
 char **environ, **__environ;
 
@@ -63,7 +63,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   int i = 0;
   for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
     struct shell_pid_and_indicator shell_pid_and_indicator;
-    bpf_map_lookup_elem(shell_pids_fd, &i, &shell_pid_and_indicator);
+    bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
     if (!shell_pid_and_indicator.shell_pid) {
       break;
     }
@@ -88,7 +88,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
 
-  bpf_map_update_elem(shell_pids_fd, &i, &helper, BPF_ANY);
+  bpf_map_update_elem(shell_pids_and_indicators_fd, &i, &helper, BPF_ANY);
 }
 
 long create_indicator(void)
@@ -232,7 +232,7 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
     int i = 0;
     for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
       struct shell_pid_and_indicator shell_pid_and_indicator;
-      bpf_map_lookup_elem(shell_pids_fd, &i, &shell_pid_and_indicator);
+      bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
       if (shell_pid_and_indicator.shell_pid == kill_event->shell_pid) {
         indicator = shell_pid_and_indicator.indicator;
         environ_address = shell_pid_and_indicator.environ_address;
@@ -266,7 +266,7 @@ void handle_child_creation(pid_t *shell_pid)
     int i = 0;
     for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
       struct shell_pid_and_indicator shell_pid_and_indicator;
-      bpf_map_lookup_elem(shell_pids_fd, &i, &shell_pid_and_indicator);
+      bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
       if (shell_pid_and_indicator.shell_pid == *shell_pid) {
         indicator = shell_pid_and_indicator.indicator;
         break;
@@ -328,14 +328,9 @@ int main()
     }
   }
 
-  shell_pids_fd = bpf_object__find_map_fd_by_name(bpf_object, "shell_pids_and_indicators");
-  if (shell_pids_fd == -EINVAL) {
+  shell_pids_and_indicators_fd = bpf_object__find_map_fd_by_name(bpf_object, "shell_pids_and_indicators");
+  if (shell_pids_and_indicators_fd == -EINVAL) {
     write_log("Failed to find shell_pids_and_indicators map");
-    return 0;
-  }
-  child_pids_fd = bpf_object__find_map_fd_by_name(bpf_object, "child_pids_and_shell_pids");
-  if (child_pids_fd == -EINVAL) {
-    write_log("Failed to find child_pids_and_shell_pids map");
     return 0;
   }
 
