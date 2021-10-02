@@ -2,9 +2,12 @@
 
 #include "common.h"
 #include "sqlite.h"
+#include "utils.h"
 
 #include <bpf/bpf.h>
 #include <bpf/libbpf.h>
+#include <errno.h>
+#include <limits.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -72,8 +75,16 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   helper.shell_pid = kill_event->shell_pid;
   helper.indicator = indicator;
   helper.environ_address = get_shell_environ_address(kill_event->shell_pid);
+  if (!helper.environ_address) {
+    write_log("get_shell_environ_address failed at handle_kill_SIGUSR1");
+    return;
+  }
 
   environ = get_shell_environ(kill_event->shell_pid, helper.environ_address);
+  if (!environ) {
+    write_log("get_shell_environ failed at handle_kill_SIGUSR1");
+    return;
+  }
   __environ = environ;
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
@@ -96,18 +107,42 @@ char ***get_shell_environ_address(pid_t shell_pid)
   char environ_offset_str[32];
   {
     FILE *process = popen("objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit}'", "r");
-    fgets(environ_offset_str, sizeof(environ_offset_str), process);
+    if (!process) {
+      write_log("popen at get_shell_environ_address failed");
+      return 0;
+    }
+
+    if (!fgets(environ_offset_str, sizeof(environ_offset_str), process)) {
+      write_log("fgets at get_shell_environ_address failed");
+      return 0;
+    }
+
     pclose(process);
   }
   long environ_offset = strtol(environ_offset_str, 0, 16);
+  if (environ_offset == LONG_MIN) {
+    write_log("strtol failed with underflow at get_shell_environ_address");
+    return 0;
+  } else if (environ_offset == LONG_MAX) {
+    write_log("strtol failed with overflow at get_shell_environ_address");
+    return 0;
+  }
 
   char maps_content_str[64];
   {
     char maps[32];
     sprintf(maps, "/proc/%d/maps", shell_pid);
     FILE *file = fopen(maps, "r");
+    if (!file) {
+      write_log("fopen at get_shell_environ_address failed");
+      return 0;
+    }
 
-    fgets(maps_content_str, 64, file);
+    if (!fgets(maps_content_str, 64, file)) {
+      write_log("fgets at get_shell_environ_address failed");
+      return 0;
+    }
+
     fclose(file);
   }
 
@@ -119,7 +154,15 @@ char ***get_shell_environ_address(pid_t shell_pid)
     }
     base_address_str[i] = maps_content_str[i];
   }
+
   long base_address = strtol(base_address_str, 0, 16);
+  if (base_address == LONG_MIN) {
+    write_log("strtol failed with underflow at get_shell_environ_address");
+    return 0;
+  } else if (base_address == LONG_MAX) {
+    write_log("strtol failed with overflow at get_shell_environ_address");
+    return 0;
+  }
   return (char ***)(base_address + environ_offset);
 }
 
@@ -135,7 +178,10 @@ char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
     remote[0].iov_base = shell_environ_address;
     remote[0].iov_len = sizeof(char ***);
 
-    process_vm_readv(shell_pid, local, 1, remote, 1, 0);
+    if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
+      write_log("process_vm_readv failed at get_shell_environ");
+      return 0;
+    }
     environ_pointer = local[0].iov_base;
   }
 
@@ -151,7 +197,10 @@ char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
 
     environ = local[0].iov_base;
 
-    process_vm_readv(shell_pid, local, 1, remote, 1, 0);
+    if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
+      write_log("process_vm_readv failed at get_shell_environ");
+      return 0;
+    }
   }
 
   {
@@ -167,7 +216,10 @@ char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
       environ[i] = local[i].iov_base;
     }
 
-    process_vm_readv(shell_pid, local, ENVIRON_AMOUNT_OF_VARIABLES, remote, ENVIRON_AMOUNT_OF_VARIABLES, 0);
+    if (process_vm_readv(shell_pid, local, ENVIRON_AMOUNT_OF_VARIABLES, remote, ENVIRON_AMOUNT_OF_VARIABLES, 0) == -1) {
+      write_log("process_vm_readv failed at get_shell_environ");
+      return 0;
+    }
   }
   return environ;
 }
@@ -191,6 +243,10 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
     }
   }
   environ = get_shell_environ(kill_event->shell_pid, environ_address);
+  if (!environ) {
+    write_log("get_shell_environ failed at handle_kill_SIGUSR2");
+    return;
+  }
   __environ = environ;
 
   add_command(db, indicator, getenv("NHI_LAST_EXECUTED_COMMAND"));
@@ -245,10 +301,12 @@ int main()
 
   bpf_object = bpf_object__open_file("nhi.bpf.o", 0);
   if (libbpf_get_error(bpf_object)) {
+    write_log("Failed to open bpf_object");
     return 0;
   }
 
   if (bpf_object__load(bpf_object)) {
+    write_log("Failed to load bpf_object");
     return 0;
   }
 
@@ -258,19 +316,30 @@ int main()
 
     bpf_program = bpf_object__find_program_by_name(bpf_object, program_names[i]);
     if (!bpf_program) {
+      write_log("Failed to find bpf_program");
       return 0;
     }
 
     if (libbpf_get_error(bpf_program__attach(bpf_program))) {
+      write_log("Failed to attach bpf_program");
       return 0;
     }
   }
 
   shell_pids_fd = bpf_object__find_map_fd_by_name(bpf_object, "shell_pids_and_indicators");
+  if (shell_pids_fd == -EINVAL) {
+    write_log("Failed to find shell_pids_and_indicators map");
+    return 0;
+  }
   child_pids_fd = bpf_object__find_map_fd_by_name(bpf_object, "child_pids_and_shell_pids");
+  if (child_pids_fd == -EINVAL) {
+    write_log("Failed to find child_pids_and_shell_pids map");
+    return 0;
+  }
 
   struct ring_buffer *ring_buffer = ring_buffer__new(bpf_object__find_map_fd_by_name(bpf_object, "ring_buffer"), handle_event, 0, 0);
   if (!ring_buffer) {
+    write_log("Failed to create ring_buffer");
     return 0;
   }
 
