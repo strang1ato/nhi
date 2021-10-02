@@ -319,7 +319,7 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
 
     write_event->indicator = indicator;
     if (buf) {
-      bpf_probe_read_user_str(write_event->output, count, buf);
+      bpf_probe_read_user(write_event->output, count, buf);
     }
 
     if (count < 3) {
