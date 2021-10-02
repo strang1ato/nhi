@@ -15,12 +15,12 @@ format:
 # 	cp -r .nhi/ ~/.nhi/
 
 create-db:
-	mkdir -p ~/.nhi
-	touch ~/.nhi/db
-	sqlite3 ~/.nhi/db "CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time TEXT, finish_time TEXT);"
+	mkdir -p /var/nhi
+	touch /var/nhi/db
+	sqlite3 /var/nhi/db "CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time TEXT, finish_time TEXT);"
 
 rm-db:
-	rm ~/.nhi/db
+	rm /var/nhi/db
 
 # install-sqlite-queue-service:
 # 	mkdir -p ~/.local/share/systemd/user
