@@ -11,8 +11,8 @@ build-cli:
 format:
 	astyle --style=otbs --indent=spaces=2 *.c *.h --recursive && go fmt ./...
 
-copy-.nhi:
-	cp -r .nhi/ ~/.nhi/
+# copy-.nhi:
+# 	cp -r .nhi/ ~/.nhi/
 
 create-db:
 	mkdir -p ~/.nhi
@@ -22,15 +22,15 @@ create-db:
 rm-db:
 	rm ~/.nhi/db
 
-install-sqlite-queue-service:
-	mkdir -p ~/.local/share/systemd/user
-	cp sqlite-queue.service ~/.local/share/systemd/user
-	systemctl --user enable sqlite-queue.service
+# install-sqlite-queue-service:
+# 	mkdir -p ~/.local/share/systemd/user
+# 	cp sqlite-queue.service ~/.local/share/systemd/user
+# 	systemctl --user enable sqlite-queue.service
 
-start-sqlite-queue-service:
-	systemctl --user start sqlite-queue.service
+# start-sqlite-queue-service:
+# 	systemctl --user start sqlite-queue.service
 
-install:
-	cp bash-nhi /usr/local/bin
-	cp lib/nhi.so /usr/lib
-	cp nhi /usr/local/bin
+# install:
+# 	cp bash-nhi /usr/local/bin
+# 	cp lib/nhi.so /usr/lib
+# 	cp nhi /usr/local/bin
