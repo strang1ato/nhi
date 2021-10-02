@@ -12,10 +12,10 @@ void create_table(sqlite3 *, long);
 
 void create_row(sqlite3 *, long);
 
-void add_PS1(sqlite3 *, long, const void *);
-void add_command(sqlite3 *, long, const void *);
-void add_output(sqlite3 *, long, const void *, size_t);
-void add_pwd(sqlite3 *, long, const void *);
+void add_PS1(sqlite3 *, long, void *);
+void add_command(sqlite3 *, long, void *);
+void add_output(sqlite3 *, long, void *, size_t);
+void add_pwd(sqlite3 *, long, void *);
 void add_start_time(sqlite3 *, long);
 void add_finish_time(sqlite3 *, long);
 void add_indicator(sqlite3 *, long);
@@ -68,7 +68,7 @@ void create_row(sqlite3 *db, long indicator)
   sqlite3_finalize(stmt);
 }
 
-void add_PS1(sqlite3 *db, long indicator, const void *PS1)
+void add_PS1(sqlite3 *db, long indicator, void *PS1)
 {
   char query[100];
   sprintf(query, "%s%ld%s%ld%s",
@@ -89,7 +89,7 @@ void add_PS1(sqlite3 *db, long indicator, const void *PS1)
   sqlite3_finalize(stmt);
 }
 
-void add_command(sqlite3 *db, long indicator, const void *command)
+void add_command(sqlite3 *db, long indicator, void *command)
 {
   char query[100];
   sprintf(query, "%s%ld%s%ld%s",
@@ -110,7 +110,7 @@ void add_command(sqlite3 *db, long indicator, const void *command)
   sqlite3_finalize(stmt);
 }
 
-void add_output(sqlite3 *db, long indicator, const void *output, size_t output_len)
+void add_output(sqlite3 *db, long indicator, void *output, size_t output_len)
 {
   char query[100];
   sprintf(query, "%s%ld%s%ld%s",
@@ -131,7 +131,7 @@ void add_output(sqlite3 *db, long indicator, const void *output, size_t output_l
   sqlite3_finalize(stmt);
 }
 
-void add_pwd(sqlite3 *db, long indicator, const void *pwd)
+void add_pwd(sqlite3 *db, long indicator, void *pwd)
 {
   char query[100];
   sprintf(query, "%s%ld%s%ld%s",
