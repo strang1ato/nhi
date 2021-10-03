@@ -56,7 +56,7 @@ func Log(db *sql.DB, session string) error {
 		return err
 	}
 
-	query := "SELECT indicator, start_time, finish_time, command FROM `" + indicator + "` ORDER BY rowid DESC;"
+	query := "SELECT indicator, start_time, finish_time, pwd, command FROM `" + indicator + "` ORDER BY rowid DESC;"
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+indicator {
@@ -69,8 +69,9 @@ func Log(db *sql.DB, session string) error {
 	for rows.Next() {
 		var indicator int
 		var startTime, finishTime,
+			pwd,
 			command string
-		rows.Scan(&indicator, &startTime, &finishTime, &command)
+		rows.Scan(&indicator, &startTime, &finishTime, &pwd, &command)
 
 		if command == "" {
 			continue
@@ -79,6 +80,7 @@ func Log(db *sql.DB, session string) error {
 		content.WriteString("\x1b[33m" + "indicator " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
 		content.WriteString("Start time:  " + startTime + "\n")
 		content.WriteString("Finish time: " + finishTime + "\n")
+		content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
 		content.WriteString("\n    " + command + "\n\n")
 	}
 
