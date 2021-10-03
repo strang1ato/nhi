@@ -26,7 +26,6 @@ struct exit_shell_indicator_event {  // size 9
 
 struct write_event {
   long indicator;
-  char _;  // just to make size unique
   char output[];
 };
 

@@ -309,6 +309,13 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     return 0;
   }
 
+  char specificity;
+  if (fd == 2) {
+    specificity = -2;
+  } else {
+    specificity = -1;
+  }
+
   if (count <= KSYS_WRITE_EVENT_SIZE-sizeof(long)-1) {
     int zero = 0;
     struct write_event *write_event;
@@ -318,8 +325,9 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     }
 
     write_event->indicator = indicator;
+    write_event->output[0] = specificity;
     if (buf) {
-      bpf_probe_read_user(write_event->output, count, buf);
+      bpf_probe_read_user(write_event->output+1, count, buf);
     }
 
     bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long)+1, 0);
