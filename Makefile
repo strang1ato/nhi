@@ -16,7 +16,9 @@ format:
 
 create-db:
 	mkdir -p /var/nhi
+	chmod 777 /var/nhi
 	touch /var/nhi/db
+	chmod 777 /var/nhi/db
 	sqlite3 /var/nhi/db "CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time TEXT, finish_time TEXT);"
 
 rm-db:
