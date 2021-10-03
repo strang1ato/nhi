@@ -13,7 +13,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, session, startEndRange string) error {
+func Fetch(db *sql.DB, session, startEndRange, directory string) error {
 	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
@@ -42,45 +42,90 @@ func Fetch(db *sql.DB, session, startEndRange string) error {
 	}
 
 	var query string
-	if intStartRange < billion && intEndRange < billion {
-		if intStartRange < 0 && intEndRange < 0 {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
-		} else if intStartRange < 0 {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
-				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
-		} else if intEndRange < 0 {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+	if directory == "" {
+		if intStartRange < billion && intEndRange < billion {
+			if intStartRange < 0 && intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
+			} else if intStartRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
+					indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+			} else if intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE rowid > %s AND rowid <= %s;",
+					indicator, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
+		} else if intStartRange < billion {
+			if intStartRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
+					indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
+					indicator, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
+		} else if intEndRange < billion {
+			if intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
+					indicator, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
 		} else {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE rowid > %s AND rowid <= %s;",
-				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
-		}
-	} else if intStartRange < billion {
-		if intStartRange < 0 {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
-				indicator, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
-		} else {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE rowid > %s AND indicator <= %s;",
-				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
-		}
-	} else if intEndRange < billion {
-		if intEndRange < 0 {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
-				"WHERE indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
-				indicator, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
-		} else {
-			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND rowid <= %s;",
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
 				indicator, sliceStartEndRange[0], sliceStartEndRange[1])
 		}
 	} else {
-		query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE indicator >= %s AND indicator <= %s;",
-			indicator, sliceStartEndRange[0], sliceStartEndRange[1])
+		directory = strings.TrimSuffix(directory, "/")
+
+		if intStartRange < billion && intEndRange < billion {
+			if intStartRange < 0 && intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, directory, sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
+			} else if intStartRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s;",
+					indicator, directory, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+			} else if intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND rowid > %s AND rowid <= %s;",
+					indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
+		} else if intStartRange < billion {
+			if intStartRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s;",
+					indicator, directory, sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE pwd = '%s' AND rowid > %s AND indicator <= %s;",
+					indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
+		} else if intEndRange < billion {
+			if intEndRange < 0 {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s`"+
+					"WHERE pwd = '%s' AND indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`);",
+					indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+			} else {
+				query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE pwd = '%s' AND indicator >= %s AND rowid <= %s;",
+					indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1])
+			}
+		} else {
+			query = fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE pwd = '%s' AND indicator >= %s AND indicator <= %s;",
+				indicator, directory, sliceStartEndRange[0], sliceStartEndRange[1])
+		}
 	}
 
 	rows, err := db.Query(query)
@@ -124,7 +169,7 @@ func Fetch(db *sql.DB, session, startEndRange string) error {
 					stderrOutput = nil
 				}
 			} else if character == 253 {
-				if err := Fetch(db, string(output[i+1:i+11]), ":"); err != nil {
+				if err := Fetch(db, string(output[i+1:i+11]), ":", ""); err != nil {
 					return err
 				}
 				copy(output[i+1:i+11], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})

@@ -19,6 +19,7 @@ var cli struct {
 	Fetch struct {
 		Session       string `arg required name:"session"`
 		StartEndRange string `arg optional name:"start:end"`
+		Directory     string `short:"d" help:"Only fetch commands that were executed in specified directory"`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 
 	Rename struct {
@@ -41,9 +42,9 @@ func Run() error {
 	case "log <session>":
 		err = log.Log(db, cli.Log.Session)
 	case "fetch <session>":
-		err = fetch.Fetch(db, cli.Fetch.Session, ":")
+		err = fetch.Fetch(db, cli.Fetch.Session, ":", cli.Fetch.Directory)
 	case "fetch <session> <start:end>":
-		err = fetch.Fetch(db, cli.Fetch.Session, cli.Fetch.StartEndRange)
+		err = fetch.Fetch(db, cli.Fetch.Session, cli.Fetch.StartEndRange, cli.Fetch.Directory)
 	case "rename <session> <new-name>":
 		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)
 	default:
