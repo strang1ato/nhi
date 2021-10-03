@@ -105,7 +105,7 @@ char ***get_shell_environ_address(pid_t shell_pid)
 {
   char environ_offset_str[32];
   {
-    FILE *process = popen("objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit}'", "r");
+    FILE *process = popen("objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'", "r");
     if (!process) {
       write_log("popen at get_shell_environ_address failed");
       return 0;
