@@ -87,6 +87,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   __environ = environ;
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
+  add_pwd(db, indicator, getenv("PWD"));
 
   bpf_map_update_elem(shell_pids_and_indicators_fd, &i, &helper, BPF_ANY);
 }
@@ -249,13 +250,13 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
   __environ = environ;
 
   add_command(db, indicator, getenv("NHI_LAST_EXECUTED_COMMAND"));
-  add_pwd(db, indicator, getenv("PWD"));
   add_finish_time(db, indicator);
   add_indicator(db, indicator);
 
   create_row(db, indicator);
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
+  add_pwd(db, indicator, getenv("PWD"));
 }
 
 void handle_child_creation(pid_t *shell_pid)
