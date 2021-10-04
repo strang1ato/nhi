@@ -59,7 +59,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
     char indicator_str[16];
     indicator_str[0] = -3;  // shell specificity
     sprintf(indicator_str+1, "%ld", indicator);
-    add_output(db, kill_event->parent_shell_indicator, indicator_str, strlen(indicator_str));
+    add_output(db, kill_event->parent_shell_indicator, indicator_str, 12);  // indicator_str len is always 12
   }
 
   create_table(db, indicator);

@@ -236,7 +236,7 @@ void meta_create_row(sqlite3 *db, long indicator)
   }
   char name[16];
   sprintf(name, "%ld", indicator);
-  if (sqlite3_bind_text(stmt, 2, name, strlen(name), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_text(stmt, 2, name, 11, NULL) != SQLITE_OK) {  // name len is always 11
     write_log(sqlite3_errmsg(db));
   }
   char *date = get_date();
