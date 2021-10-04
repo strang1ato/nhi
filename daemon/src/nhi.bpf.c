@@ -56,6 +56,9 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
   }
 
   pid_t shell_pid = bpf_get_current_pid_tgid() >> 32;
+
+  pid_t parent_shell_pid = 0;
+  long parent_shell_indicator = 0;
   if (sig == SIGUSR1) {
     // remove element where shell_pid from child_pids_and_shell_pids
     int i = 0;
@@ -67,6 +70,8 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
       if (child_pid_and_shell_pid) {
         if (child_pid_and_shell_pid->child_pid == shell_pid) {
           pid_index = i;
+
+          parent_shell_pid = child_pid_and_shell_pid->shell_pid;
         } else if (!child_pid_and_shell_pid->child_pid) {
           if (pid_index != -1) {
             i--;
@@ -81,6 +86,24 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
       }
       i++;
     }
+
+    // find indicator of the parent shell
+    i = 0;
+    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
+      struct shell_pid_and_indicator *shell_pid_and_indicator;
+      shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
+      if (shell_pid_and_indicator) {
+        if (!shell_pid_and_indicator->shell_pid) {
+          break;
+        }
+
+        if (shell_pid_and_indicator->shell_pid == parent_shell_pid) {
+          parent_shell_indicator = shell_pid_and_indicator->indicator;
+          break;
+        }
+      }
+      i++;
+    }
   }
 
   struct kill_event *kill_event = bpf_ringbuf_reserve(&ring_buffer, sizeof(struct kill_event), 0);
@@ -90,6 +113,7 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
 
   kill_event->shell_pid = shell_pid;
   kill_event->sig = sig;
+  kill_event->parent_shell_indicator = parent_shell_indicator;
   bpf_ringbuf_submit(kill_event, 0);
   return 0;
 }

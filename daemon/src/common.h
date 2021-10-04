@@ -14,9 +14,10 @@
 
 typedef int pid_t;
 
-struct kill_event {  // size 8
+struct kill_event {  // size 16
   pid_t shell_pid;
   int sig;
+  long parent_shell_indicator;
 };
 
 struct exit_shell_indicator_event {  // size 9

@@ -169,10 +169,10 @@ func Fetch(db *sql.DB, session, startEndRange, directory string) error {
 					stderrOutput = nil
 				}
 			} else if character == 253 {
-				if err := Fetch(db, string(output[i+1:i+11]), ":", ""); err != nil {
+				if err := Fetch(db, string(output[i+1:i+12]), ":", ""); err != nil {
 					return err
 				}
-				copy(output[i+1:i+11], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
+				copy(output[i+1:i+12], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			} else {
 				if writeStdout == true {
 					stdoutOutput = append(stdoutOutput, character)

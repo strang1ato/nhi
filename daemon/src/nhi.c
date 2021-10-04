@@ -55,6 +55,13 @@ int handle_event(void *ctx, void *data, size_t data_sz)
 void handle_kill_SIGUSR1(struct kill_event *kill_event)
 {
   long indicator = create_indicator();
+  if (kill_event->parent_shell_indicator) {
+    char indicator_str[16];
+    indicator_str[0] = -3;  // shell specificity
+    sprintf(indicator_str+1, "%ld", indicator);
+    add_output(db, kill_event->parent_shell_indicator, indicator_str, strlen(indicator_str));
+  }
+
   create_table(db, indicator);
   create_row(db, indicator);
 
