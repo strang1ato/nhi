@@ -21,13 +21,13 @@ struct bpf_object *bpf_object;
 
 int shell_pids_and_indicators_fd;
 
-char **environ, **__environ;
+char **__environ;
 
 int handle_event(void *, void *, size_t);
 void handle_kill_SIGUSR1(struct kill_event *);
 long create_indicator(void);
 char ***get_shell_environ_address(pid_t);
-char **get_shell_environ(pid_t, char ***);
+void get_shell_environ(pid_t, char ***);
 void handle_kill_SIGUSR2(struct kill_event *, size_t);
 void handle_child_creation(pid_t *);
 void handle_shell_exit(struct exit_shell_indicator_event *);
@@ -86,12 +86,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
     return;
   }
 
-  environ = get_shell_environ(kill_event->shell_pid, helper.environ_address);
-  if (!environ) {
-    write_log("get_shell_environ failed at handle_kill_SIGUSR1");
-    return;
-  }
-  __environ = environ;
+  get_shell_environ(kill_event->shell_pid, helper.environ_address);
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
@@ -173,12 +168,12 @@ char ***get_shell_environ_address(pid_t shell_pid)
   return (char ***)(base_address + environ_offset);
 }
 
-char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
+void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
 {
   char ***environ_pointer;
   {
     struct iovec local[1];
-    local[0].iov_base = calloc(sizeof(char ***), 1);
+    local[0].iov_base = malloc(sizeof(char ***));
     local[0].iov_len = sizeof(char ***);
 
     struct iovec remote[1];
@@ -187,12 +182,18 @@ char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
 
     if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
       write_log("process_vm_readv failed at get_shell_environ");
-      return 0;
+      return;
     }
     environ_pointer = local[0].iov_base;
   }
 
-  char **environ;
+  if (__environ) {
+    for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
+      free(__environ[i]);
+    }
+    free(__environ);
+  }
+
   {
     struct iovec local[1];
     local[0].iov_base = calloc(ENVIRON_AMOUNT_OF_VARIABLES, sizeof(char *));
@@ -202,33 +203,34 @@ char **get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
     remote[0].iov_base = *environ_pointer;
     remote[0].iov_len = ENVIRON_AMOUNT_OF_VARIABLES;
 
-    environ = local[0].iov_base;
+    __environ = local[0].iov_base;
 
     if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
       write_log("process_vm_readv failed at get_shell_environ");
-      return 0;
+      return;
     }
   }
+
+  free(environ_pointer);
 
   {
     struct iovec local[ENVIRON_AMOUNT_OF_VARIABLES];
     struct iovec remote[ENVIRON_AMOUNT_OF_VARIABLES];
     for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
-      local[i].iov_base = calloc(ENVIRON_ELEMENT_SIZE, 1);
+      local[i].iov_base = calloc(1, ENVIRON_ELEMENT_SIZE);
       local[i].iov_len = ENVIRON_ELEMENT_SIZE;
 
-      remote[i].iov_base = environ[i];
+      remote[i].iov_base = __environ[i];
       remote[i].iov_len = ENVIRON_ELEMENT_SIZE;
 
-      environ[i] = local[i].iov_base;
+      __environ[i] = local[i].iov_base;
     }
 
     if (process_vm_readv(shell_pid, local, ENVIRON_AMOUNT_OF_VARIABLES, remote, ENVIRON_AMOUNT_OF_VARIABLES, 0) == -1) {
       write_log("process_vm_readv failed at get_shell_environ");
-      return 0;
+      return;
     }
   }
-  return environ;
 }
 
 void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
@@ -249,12 +251,7 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
       i++;
     }
   }
-  environ = get_shell_environ(kill_event->shell_pid, environ_address);
-  if (!environ) {
-    write_log("get_shell_environ failed at handle_kill_SIGUSR2");
-    return;
-  }
-  __environ = environ;
+  get_shell_environ(kill_event->shell_pid, environ_address);
 
   add_command(db, indicator, getenv("NHI_LAST_EXECUTED_COMMAND"));
   add_finish_time(db, indicator);
@@ -304,6 +301,8 @@ __attribute__((destructor)) void destroy(void)
 
 int main()
 {
+  __environ = 0;
+
   db = open_db();
   if (!db) {
     return 0;
