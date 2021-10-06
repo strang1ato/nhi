@@ -21,12 +21,13 @@ struct bpf_object *bpf_object;
 
 int shell_pids_and_indicators_fd;
 
-char **__environ;
+char **__environ, **original_environ;
 
 int handle_event(void *, void *, size_t);
 void handle_kill_SIGUSR1(struct kill_event *);
 char ***get_shell_environ_address(pid_t);
 void get_shell_environ(pid_t, char ***);
+void reverse_environ(void);
 void handle_kill_SIGUSR2(struct kill_event *, size_t);
 void handle_child_creation(pid_t *);
 void handle_shell_exit(struct exit_shell_indicator_event *);
@@ -89,6 +90,8 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
+
+  reverse_environ();
 
   bpf_map_update_elem(shell_pids_and_indicators_fd, &i, &helper, BPF_ANY);
 }
@@ -176,13 +179,6 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
     environ_pointer = local[0].iov_base;
   }
 
-  if (__environ) {
-    for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
-      free(__environ[i]);
-    }
-    free(__environ);
-  }
-
   {
     struct iovec local[1];
     local[0].iov_base = calloc(ENVIRON_AMOUNT_OF_VARIABLES, sizeof(char *));
@@ -222,6 +218,15 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
   }
 }
 
+void reverse_environ(void) {
+  for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
+    free(__environ[i]);
+  }
+  free(__environ);
+
+  __environ = original_environ;
+}
+
 void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
 {
   // find indicator and environ_address of the shell
@@ -250,6 +255,8 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
+
+  reverse_environ();
 }
 
 void handle_child_creation(pid_t *shell_pid)
@@ -290,7 +297,7 @@ __attribute__((destructor)) void destroy(void)
 
 int main()
 {
-  __environ = 0;
+  original_environ = __environ;
 
   db = open_db();
   if (!db) {
