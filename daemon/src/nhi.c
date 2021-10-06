@@ -25,7 +25,6 @@ char **__environ;
 
 int handle_event(void *, void *, size_t);
 void handle_kill_SIGUSR1(struct kill_event *);
-long create_indicator(void);
 char ***get_shell_environ_address(pid_t);
 void get_shell_environ(pid_t, char ***);
 void handle_kill_SIGUSR2(struct kill_event *, size_t);
@@ -54,7 +53,7 @@ int handle_event(void *ctx, void *data, size_t data_sz)
 
 void handle_kill_SIGUSR1(struct kill_event *kill_event)
 {
-  long indicator = create_indicator();
+  long indicator = get_indicator();
   if (kill_event->parent_shell_indicator) {
     char indicator_str[16];
     indicator_str[0] = -3;  // shell specificity
@@ -92,16 +91,6 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   add_pwd(db, indicator, getenv("PWD"));
 
   bpf_map_update_elem(shell_pids_and_indicators_fd, &i, &helper, BPF_ANY);
-}
-
-long create_indicator(void)
-{
-  struct timeval now;
-  gettimeofday(&now, 0);
-  time_t seconds_part = now.tv_sec*10;
-  suseconds_t deciseconds_part = now.tv_usec/100000;
-  long indicator = seconds_part + deciseconds_part;  // indicator is time in deciseconds since unix epoch
-  return indicator;
 }
 
 char ***get_shell_environ_address(pid_t shell_pid)

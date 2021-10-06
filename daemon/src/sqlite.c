@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/time.h>
+#include <time.h>
 
 sqlite3 *open_db(void);
 
@@ -39,7 +40,7 @@ void create_table(sqlite3 *db, long indicator)
   sqlite3_stmt *stmt;
   char query[150];
   sprintf(query, "%s%ld%s",
-          "CREATE TABLE `", indicator, "` (PS1 TEXT, command TEXT, output BLOB, pwd TEXT, start_time TEXT, finish_time TEXT, indicator INTEGER);");
+          "CREATE TABLE `", indicator, "` (PS1 TEXT, command TEXT, output BLOB, pwd TEXT, start_time INTEGER, finish_time INTEGER, indicator INTEGER);");
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
@@ -162,8 +163,7 @@ void add_start_time(sqlite3 *db, long indicator)
     write_log(sqlite3_errmsg(db));
   }
 
-  char *date = get_date();
-  if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_int64(stmt, 1, time(0)) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 
@@ -184,8 +184,7 @@ void add_finish_time(sqlite3 *db, long indicator)
     write_log(sqlite3_errmsg(db));
   }
 
-  char *date = get_date();
-  if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_int64(stmt, 1, time(0)) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 
@@ -239,8 +238,7 @@ void meta_create_row(sqlite3 *db, long indicator)
   if (sqlite3_bind_text(stmt, 2, name, 11, NULL) != SQLITE_OK) {  // name len is always 11
     write_log(sqlite3_errmsg(db));
   }
-  char *date = get_date();
-  if (sqlite3_bind_text(stmt, 3, date, strlen(date), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_int64(stmt, 3, time(0)) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 
@@ -259,8 +257,7 @@ void meta_add_finish_time(sqlite3 *db, long indicator)
     write_log(sqlite3_errmsg(db));
   }
 
-  char *date = get_date();
-  if (sqlite3_bind_text(stmt, 1, date, strlen(date), NULL) != SQLITE_OK) {
+  if (sqlite3_bind_int64(stmt, 1, time(0)) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
   if (sqlite3_bind_int64(stmt, 2, indicator) != SQLITE_OK) {

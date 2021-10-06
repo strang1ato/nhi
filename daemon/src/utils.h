@@ -1,2 +1,2 @@
 int write_log(const char *);
-char *get_date(void);
+long get_indicator(void);
