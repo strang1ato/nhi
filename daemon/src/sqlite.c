@@ -201,11 +201,7 @@ void add_indicator(sqlite3 *db, long indicator)
   sprintf(query, "%s%ld%s%ld%s",
           "UPDATE `", indicator, "` SET indicator=? WHERE rowid = (SELECT MAX(rowid) FROM `", indicator, "`);");
 
-  struct timeval now;
-  gettimeofday(&now, NULL);
-  time_t seconds_part = now.tv_sec*10;
-  suseconds_t deciseconds_part = now.tv_usec/100000;
-  time_t command_indicator = seconds_part + deciseconds_part;
+  long command_indicator = get_indicator();
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
