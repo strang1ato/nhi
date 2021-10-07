@@ -8,6 +8,7 @@
 #include <bpf/libbpf.h>
 #include <errno.h>
 #include <limits.h>
+#include <signal.h>
 #include <sqlite3.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -32,6 +33,9 @@ void handle_kill_SIGUSR2(struct kill_event *, size_t);
 void handle_child_creation(pid_t *);
 void handle_shell_exit(struct exit_shell_indicator_event *);
 void handle_write(struct write_event *, size_t);
+
+void destroy(void);
+void sigint_hack(int);
 
 int handle_event(void *ctx, void *data, size_t data_sz)
 {
@@ -218,7 +222,8 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
   }
 }
 
-void reverse_environ(void) {
+void reverse_environ(void)
+{
   for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
     free(__environ[i]);
   }
@@ -295,8 +300,15 @@ __attribute__((destructor)) void destroy(void)
   sqlite3_close(db);
 }
 
+void sigint_hack(int signum)
+{
+  exit(0);
+}
+
 int main()
 {
+  signal(SIGINT, sigint_hack);
+
   original_environ = __environ;
 
   db = open_db();
@@ -325,10 +337,12 @@ int main()
       return 0;
     }
 
-    if (libbpf_get_error(bpf_program__attach(bpf_program))) {
+    struct bpf_link *bpf_link = bpf_program__attach(bpf_program);
+    if (libbpf_get_error(bpf_link)) {
       write_log("Failed to attach bpf_program");
       return 0;
     }
+    free(bpf_link);
   }
 
   shell_pids_and_indicators_fd = bpf_object__find_map_fd_by_name(bpf_object, "shell_pids_and_indicators");
