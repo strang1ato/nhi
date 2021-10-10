@@ -27,12 +27,12 @@ void meta_add_finish_time(sqlite3 *, long);
 sqlite3 *open_db(void)
 {
   sqlite3 *db;
-  #ifndef TEST
-    char *db_path = "/var/nhi/db";
-  #else
-    char db_path[256];
-    sprintf(db_path, "%s/testing/db", getenv("PWD"));
-  #endif
+#ifndef TEST
+  char *db_path = "/var/nhi/db";
+#else
+  char db_path[256];
+  sprintf(db_path, "%s/testing/db", getenv("PWD"));
+#endif
   if (sqlite3_open(db_path, &db) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
     return 0;

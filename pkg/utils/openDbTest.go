@@ -1,16 +1,18 @@
-// +build !TEST
+// +build TEST
 
 package utils
 
 import (
 	"database/sql"
+	"os"
 
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// OpenDb opens nhi database
+// OpenDb opens nhi test database
 func OpenDb() (*sql.DB, error) {
-	db, err := sql.Open("sqlite3", "/var/nhi/db")
+	pwd := os.Getenv("PWD")
+	db, err := sql.Open("sqlite3", pwd+"/testing/db")
 	if err != nil {
 		return nil, err
 	}

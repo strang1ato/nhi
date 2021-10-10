@@ -15,6 +15,9 @@ build-test-daemon:
 build-cli:
 	go build -o nhi main.go
 
+build-test-cli:
+	go build -o nhi -tags TEST main.go
+
 format:
 	astyle --style=otbs --indent=spaces=2 *.c *.h --recursive && go fmt ./...
 
