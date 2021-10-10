@@ -1,0 +1,10 @@
+my_prompt echo shell1 test
+shell1 test
+my_prompt bash
+my_prompt echo shell2 test
+shell2 test
+my_prompt bash
+my_prompt echo shell3 test
+shell3 test
+my_prompt echo shell1 test again
+shell1 test again

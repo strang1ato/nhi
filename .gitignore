@@ -2,8 +2,7 @@ nhid
 
 nhi
 
-test.db
-test.log
+*.log
 
 *.o
 *.orig

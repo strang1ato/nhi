@@ -1,0 +1,28 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: debian-11
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install valgrind
+        run: |
+          make build-daemon
+          make build-cli
+          sudo make create-db
+
+      - name: Install valgrind
+        run: sudo apt-get install valgrind -y
+
+      - name: Run tests
+        run: ./run-tests

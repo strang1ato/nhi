@@ -1,0 +1,34 @@
+#!/usr/bin/expect
+
+spawn bash
+expect "my_prompt"
+sleep 1
+send "echo shell1 test\r"
+expect "my_prompt"
+sleep 1
+
+send "bash\r"
+expect "my_prompt"
+sleep 1
+send "echo shell2 test\r"
+expect "my_prompt"
+sleep 1
+
+send "bash\r"
+expect "my_prompt"
+sleep 1
+send "echo shell3 test\r"
+expect "my_prompt"
+sleep 1
+send "exit\r"
+
+expect "my_prompt"
+sleep 1
+send "exit\r"
+
+expect "my_prompt"
+sleep 1
+send "echo shell1 test again\r"
+expect "my_prompt"
+sleep 1
+send "exit\r"
