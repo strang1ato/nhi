@@ -10,19 +10,18 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-20.10
+    runs-on: ubuntu-20.04
 
     steps:
       - uses: actions/checkout@v2
 
-      - name: Install valgrind
+      - name: Install go
         run: |
-          make build-daemon
-          make build-cli
-          sudo make create-db
+          sudo apt update
+          sudo apt install golang
 
-      - name: Install valgrind
-        run: sudo apt-get install valgrind -y
+      - name: Build test cli
+        run: make build-test-cli
 
       - name: Run tests
-        run: ./run-tests
+        run: ./testing/test-cli

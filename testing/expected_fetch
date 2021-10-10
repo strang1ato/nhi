@@ -1,0 +1,11 @@
+my_prompt echo it is a test
+it is a test
+my_prompt date
+Sun 10 Oct 2021 09:08:20 PM CEST
+my_prompt bash
+my_prompt echo shell2 test2
+shell2 test2
+my_prompt pwd
+/home/karol
+my_prompt echo $$
+25580

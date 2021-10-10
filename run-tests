@@ -2,6 +2,8 @@
 
 set -e
 
+./testing/test-cli
+
 sudo valgrind ./nhid 2> ./nhid.log &
 nhid_pid="$!"
 
@@ -23,7 +25,7 @@ if [[ "$leaked_bytes" != "0" ]]; then
   exit 1
 fi
 
-diff_result="$(diff ./testing/expected_fetch_output <(./nhi fetch {-3}) || true)"
+diff_result="$(diff ./testing/expected_fetch_after_expect-test <(./nhi fetch {-3}) || true)"
 if [[ "$diff_result" != "" ]]; then
   echo The output of fetch is not expected! 1>&2
   exit 1
