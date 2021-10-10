@@ -42,9 +42,15 @@ func Run() error {
 	case "log <session>":
 		err = log.Log(db, cli.Log.Session)
 	case "fetch <session>":
-		err = fetch.Fetch(db, cli.Fetch.Session, ":", cli.Fetch.Directory)
+		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
+		if err == nil {
+			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory)
+		}
 	case "fetch <session> <start:end>":
-		err = fetch.Fetch(db, cli.Fetch.Session, cli.Fetch.StartEndRange, cli.Fetch.Directory)
+		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
+		if err == nil {
+			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory)
+		}
 	case "rename <session> <new-name>":
 		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)
 	default:

@@ -8,17 +8,10 @@ import (
 	"strings"
 
 	"database/sql"
-
-	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, session, startEndRange, directory string) error {
-	indicator, err := utils.GetSessionIndicator(db, session)
-	if err != nil {
-		return err
-	}
-
+func Fetch(db *sql.DB, indicator, startEndRange, directory string) error {
 	startEndRange = strings.TrimPrefix(startEndRange, "{")
 	startEndRange = strings.TrimSuffix(startEndRange, "}")
 
