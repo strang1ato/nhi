@@ -18,6 +18,10 @@ build-cli:
 build-test-cli:
 	go build -o nhi -tags TEST main.go
 
+create-test-db:
+	touch testing/db
+	cat testing/original_db > testing/db
+
 format:
 	astyle --style=otbs --indent=spaces=2 *.c *.h --recursive && go fmt ./...
 
