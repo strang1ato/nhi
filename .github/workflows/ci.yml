@@ -15,6 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Set Warsaw timezone
+        run: sudo timedatectl set-timezone Europe/Warsaw
+
       - name: Install go
         run: |
           sudo apt update
