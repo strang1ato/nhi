@@ -2,6 +2,8 @@ nhid
 
 nhi
 
+testing/db
+
 *.log
 
 *.o
