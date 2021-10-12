@@ -4,6 +4,7 @@ import (
 	"errors"
 	"strconv"
 	"strings"
+	"time"
 
 	"database/sql"
 
@@ -22,16 +23,19 @@ func Log(db *sql.DB, session string) error {
 		var content strings.Builder
 		for rows.Next() {
 			var name string
-			var startTime, finishTime int
+			var startTime, finishTime int64
 			rows.Scan(&name, &startTime, &finishTime)
 
 			if name == "" || name == "meta" {
 				continue
 			}
 
+			startTimeLocal := time.Unix(startTime, 0)
+			finishTimeLocal := time.Unix(finishTime, 0)
+
 			content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
-			content.WriteString("Start time:  " + strconv.Itoa(startTime) + "\n")
-			content.WriteString("Finish time: " + strconv.Itoa(finishTime) + "\n\n")
+			content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
+			content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
 		}
 
 		contentStr := content.String()
@@ -68,7 +72,7 @@ func Log(db *sql.DB, session string) error {
 	var content strings.Builder
 	for rows.Next() {
 		var indicator,
-			startTime, finishTime int
+			startTime, finishTime int64
 		var pwd,
 			command string
 		rows.Scan(&indicator, &startTime, &finishTime, &pwd, &command)
@@ -77,9 +81,12 @@ func Log(db *sql.DB, session string) error {
 			continue
 		}
 
-		content.WriteString("\x1b[33m" + "indicator " + strconv.Itoa(indicator) + "\x1b[0m" + "\n")
-		content.WriteString("Start time:  " + strconv.Itoa(startTime) + "\n")
-		content.WriteString("Finish time: " + strconv.Itoa(finishTime) + "\n")
+		startTimeLocal := time.Unix(startTime, 0)
+		finishTimeLocal := time.Unix(finishTime, 0)
+
+		content.WriteString("\x1b[33m" + "indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
+		content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
+		content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
 		content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
 		content.WriteString("\n    " + command + "\n\n")
 	}

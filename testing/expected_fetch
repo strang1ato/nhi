@@ -1,11 +1,11 @@
-my_prompt echo it is a test
-it is a test
-my_prompt date
-Sun 10 Oct 2021 09:08:20 PM CEST
-my_prompt bash
-my_prompt echo shell2 test2
-shell2 test2
-my_prompt pwd
+karol@karol:~$ echo hello 1
+hello 1
+karol@karol:~$ date
+Tue 12 Oct 2021 04:05:40 PM CEST
+karol@karol:~$ bash
+karol@karol:~$ pwd
 /home/karol
-my_prompt echo $$
-25580
+karol@karol:~$ echo hello shell2
+hello shell2
+karol@karol:~$ echo $$
+45300
