@@ -20,12 +20,11 @@ struct kill_event {  // size 16
   long parent_shell_indicator;
 };
 
-struct exit_shell_indicator_event {  // size 9
+struct exit_shell_indicator_event {  // size 8
   long indicator;
-  char _;  // add char just to make size unique
 };
 
-struct write_event {
+struct write_event {  // realistically at least size 11
   long indicator;
   char output[];
 };

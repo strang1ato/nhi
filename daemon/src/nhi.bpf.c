@@ -354,6 +354,10 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
       bpf_probe_read_user(write_event->output+1, count, buf);
     }
 
+    if (count == 7) {
+      count++;
+    }
+
     bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long)+1, 0);
   }
   return 0;
