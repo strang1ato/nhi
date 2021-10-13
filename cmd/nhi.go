@@ -39,9 +39,9 @@ func Run() error {
 	ctx := kong.Parse(&cli)
 	switch ctx.Command() {
 	case "log":
-		err = log.Log(db, "", "")
+		err = log.Log(db)
 	case "log <session>":
-		err = log.Log(db, cli.Log.Session, cli.Log.Directory)
+		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory)
 	case "fetch <session>":
 		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
