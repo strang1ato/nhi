@@ -2,6 +2,7 @@ package log
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -12,7 +13,7 @@ import (
 )
 
 // Log shows command logs using less program (in similar manner as git log does)
-func Log(db *sql.DB, session string) error {
+func Log(db *sql.DB, session, directory string) error {
 	// If session is not specified show list of all sessions
 	if session == "" {
 		rows, err := db.Query("SELECT name, start_time, finish_time FROM meta ORDER BY rowid DESC;")
@@ -60,7 +61,22 @@ func Log(db *sql.DB, session string) error {
 		return err
 	}
 
-	query := "SELECT indicator, start_time, finish_time, pwd, command FROM `" + indicator + "` ORDER BY rowid DESC;"
+	var where string
+	if directory != "" {
+		if directory != "/" && directory != "//" {
+			directory = strings.TrimSuffix(directory, "/")
+		}
+		where = fmt.Sprintf("pwd = '%s'", directory)
+	}
+
+	var query string
+	if where == "" {
+		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` ORDER BY rowid DESC;",
+			indicator)
+	} else {
+		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
+			indicator, where)
+	}
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+indicator {

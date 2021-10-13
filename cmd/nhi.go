@@ -13,7 +13,8 @@ import (
 // Declare cli variable used by kong
 var cli struct {
 	Log struct {
-		Session string `arg optional name:"session"`
+		Session   string `arg optional name:"session"`
+		Directory string `short:"d" help:"Only show commands that were executed in specified directory"`
 	} `cmd help:"Show logs"`
 
 	Fetch struct {
@@ -38,9 +39,9 @@ func Run() error {
 	ctx := kong.Parse(&cli)
 	switch ctx.Command() {
 	case "log":
-		err = log.Log(db, "")
+		err = log.Log(db, "", "")
 	case "log <session>":
-		err = log.Log(db, cli.Log.Session)
+		err = log.Log(db, cli.Log.Session, cli.Log.Directory)
 	case "fetch <session>":
 		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
