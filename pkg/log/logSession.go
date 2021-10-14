@@ -13,7 +13,7 @@ import (
 )
 
 // Log shows log of commands using less program (in similar manner as git log does)
-func LogSession(db *sql.DB, session, directory string) error {
+func LogSession(db *sql.DB, session, directory string, long bool) error {
 	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
@@ -61,7 +61,9 @@ func LogSession(db *sql.DB, session, directory string) error {
 		content.WriteString("\x1b[33m" + "indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
 		content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
 		content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
-		content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
+		if long {
+			content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
+		}
 		content.WriteString("\n    " + command + "\n\n")
 	}
 

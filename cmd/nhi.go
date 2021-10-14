@@ -15,6 +15,7 @@ var cli struct {
 	Log struct {
 		Session   string `arg optional name:"session"`
 		Directory string `short:"d" help:"Only show commands that were executed in specified directory"`
+		Long      bool   `short:"l" help:"Use a long listing format"`
 	} `cmd help:"Show logs"`
 
 	Fetch struct {
@@ -41,7 +42,7 @@ func Run() error {
 	case "log":
 		err = log.Log(db)
 	case "log <session>":
-		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory)
+		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
 	case "fetch <session>":
 		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
