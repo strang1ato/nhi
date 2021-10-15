@@ -40,7 +40,7 @@ func Run() error {
 	ctx := kong.Parse(&cli)
 	switch ctx.Command() {
 	case "log":
-		err = log.Log(db)
+		err = log.Log(db, cli.Log.Directory, cli.Log.Long)
 	case "log <session>":
 		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
 	case "fetch <session>":
