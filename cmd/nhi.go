@@ -44,12 +44,14 @@ func Run() error {
 	case "log <session>":
 		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
 	case "fetch <session>":
-		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
+		var indicator string
+		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
 			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory)
 		}
 	case "fetch <session> <start:end>":
-		indicator, err := utils.GetSessionIndicator(db, cli.Fetch.Session)
+		var indicator string
+		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
 			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory)
 		}

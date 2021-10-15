@@ -17,6 +17,10 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory string) error {
 
 	sliceStartEndRange := strings.SplitN(startEndRange, ":", 2)
 
+	if (len(sliceStartEndRange) < 2) {
+		return errors.New("Please specify range of commands properly")
+	}
+
 	billion := 1000000000
 	if sliceStartEndRange[0] == "" {
 		sliceStartEndRange[0] = "0"
