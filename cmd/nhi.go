@@ -6,6 +6,7 @@ import (
 	"github.com/alecthomas/kong"
 	"github.com/strang1ato/nhi/pkg/fetch"
 	"github.com/strang1ato/nhi/pkg/log"
+	"github.com/strang1ato/nhi/pkg/logSession"
 	"github.com/strang1ato/nhi/pkg/rename"
 	"github.com/strang1ato/nhi/pkg/utils"
 )
@@ -42,7 +43,7 @@ func Run() error {
 	case "log":
 		err = log.Log(db, cli.Log.Directory, cli.Log.Long)
 	case "log <session>":
-		err = log.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
+		err = logSession.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
 	case "fetch <session>":
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)

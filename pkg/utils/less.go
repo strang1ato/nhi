@@ -1,4 +1,4 @@
-package log
+package utils
 
 import (
 	"fmt"
@@ -8,8 +8,8 @@ import (
 	"golang.org/x/sys/unix"
 )
 
-// setupMemoryFile setups temporary RAM file which exists within program lifetime
-func setupMemoryFile(content string, contentLen int) (string, error) {
+// SetupMemoryFile setups temporary RAM file which exists within program lifetime
+func SetupMemoryFile(content string, contentLen int) (string, error) {
 	fd, err := unix.MemfdCreate("nhiMemoryFile", 0)
 	if err != nil {
 		return "", err
@@ -34,8 +34,8 @@ func setupMemoryFile(content string, contentLen int) (string, error) {
 	return fp, nil
 }
 
-// runLess open file of given path in less with suitable flags
-func runLess(fp string) error {
+// RunLess open file of given path in less with suitable flags
+func RunLess(fp string) error {
 	cmd := exec.Command("less", "-R", fp)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"database/sql"
+
+	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Log shows log of session using less program (in similar manner as git log does)
@@ -17,6 +19,23 @@ func Log(db *sql.DB, directory string, long bool) error {
 		return err
 	}
 
+	contentStr, contentStrLen, err := getContentStrAndLen(db, rows, directory, long)
+	if err != nil {
+		return err
+	}
+
+	fp, err := utils.SetupMemoryFile(contentStr, contentStrLen)
+	if err != nil {
+		return err
+	}
+
+	if err := utils.RunLess(fp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory string, long bool) (string, int, error) {
 	var content strings.Builder
 	for rows.Next() {
 		var indicator int64
@@ -31,13 +50,7 @@ func Log(db *sql.DB, directory string, long bool) error {
 		startTimeLocal := time.Unix(startTime, 0)
 		finishTimeLocal := time.Unix(finishTime, 0)
 
-		var where string
-		if directory != "" {
-			if directory != "/" && directory != "//" {
-				directory = strings.TrimSuffix(directory, "/")
-			}
-			where = fmt.Sprintf("pwd = '%s'", directory)
-		}
+		where := getWhere(directory)
 
 		var query string
 		if where == "" {
@@ -50,7 +63,7 @@ func Log(db *sql.DB, directory string, long bool) error {
 
 		rows, err := db.Query(query)
 		if err != nil {
-			return err
+			return "", 0, err
 		}
 
 		if long {
@@ -105,16 +118,18 @@ func Log(db *sql.DB, directory string, long bool) error {
 	contentStr := content.String()
 	contentStrLen := len(contentStr)
 	if contentStrLen == 0 {
-		return errors.New("no shell sessions to show")
+		return "", 0, errors.New("no commands where executed in this shell session")
 	}
+	return contentStr, contentStrLen, nil
+}
 
-	fp, err := setupMemoryFile(contentStr, contentStrLen)
-	if err != nil {
-		return err
+func getWhere(directory string) string {
+	var where string
+	if directory != "" {
+		if directory != "/" && directory != "//" {
+			directory = strings.TrimSuffix(directory, "/")
+		}
+		where = fmt.Sprintf("pwd = '%s'", directory)
 	}
-
-	if err := runLess(fp); err != nil {
-		return err
-	}
-	return nil
+	return where
 }

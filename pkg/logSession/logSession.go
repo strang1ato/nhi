@@ -1,4 +1,4 @@
-package log
+package logSession
 
 import (
 	"errors"
@@ -43,12 +43,12 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 		return err
 	}
 
-	fp, err := setupMemoryFile(contentStr, contentStrLen)
+	fp, err := utils.SetupMemoryFile(contentStr, contentStrLen)
 	if err != nil {
 		return err
 	}
 
-	if err := runLess(fp); err != nil {
+	if err := utils.RunLess(fp); err != nil {
 		return err
 	}
 	return nil
