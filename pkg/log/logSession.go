@@ -19,13 +19,7 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 		return err
 	}
 
-	var where string
-	if directory != "" {
-		if directory != "/" && directory != "//" {
-			directory = strings.TrimSuffix(directory, "/")
-		}
-		where = fmt.Sprintf("pwd = '%s'", directory)
-	}
+	where := getWhere(directory)
 
 	var query string
 	if where == "" {
@@ -35,6 +29,7 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
 			indicator, where)
 	}
+
 	rows, err := db.Query(query)
 	if err != nil {
 		if err.Error() == "no such table: "+indicator {
@@ -43,6 +38,34 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 		return err
 	}
 
+	contentStr, contentStrLen, err := getContentStrAndLen(rows, long)
+	if err != nil {
+		return err
+	}
+
+	fp, err := setupMemoryFile(contentStr, contentStrLen)
+	if err != nil {
+		return err
+	}
+
+	if err := runLess(fp); err != nil {
+		return err
+	}
+	return nil
+}
+
+func getWhere(directory string) string {
+	var where string
+	if directory != "" {
+		if directory != "/" && directory != "//" {
+			directory = strings.TrimSuffix(directory, "/")
+		}
+		where = fmt.Sprintf("pwd = '%s'", directory)
+	}
+	return where
+}
+
+func getContentStrAndLen(rows *sql.Rows, long bool) (string, int, error) {
 	var content strings.Builder
 	for rows.Next() {
 		var indicator,
@@ -70,16 +93,7 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 	contentStr := content.String()
 	contentStrLen := len(contentStr)
 	if contentStrLen == 0 {
-		return errors.New("no commands where executed in this shell session")
+		return "", 0, errors.New("no commands where executed in this shell session")
 	}
-
-	fp, err := setupMemoryFile(contentStr, contentStrLen)
-	if err != nil {
-		return err
-	}
-
-	if err := runLess(fp); err != nil {
-		return err
-	}
-	return nil
+	return contentStr, contentStrLen, nil
 }
