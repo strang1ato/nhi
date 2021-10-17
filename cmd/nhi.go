@@ -15,7 +15,9 @@ import (
 var cli struct {
 	Log struct {
 		Session   string `arg optional name:"session"`
-		Directory string `short:"d" help:"Only show sessions where commands were executed in specified directory."`
+		Directory string `short:"d" help:"Only show shell sessions where commands were executed in specified directory."`
+		Before    string `short:"b" help:"Only show shell sessions created (or commands executed if session specified) before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After     string `short:"a" help:"Only show shell sessions created (or commands executed if session specified) after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		Long      bool   `short:"l" help:"Use a long listing format."`
 	} `cmd help:"Show logs"`
 
@@ -43,9 +45,9 @@ func Run() error {
 	ctx := kong.Parse(&cli)
 	switch ctx.Command() {
 	case "log":
-		err = log.Log(db, cli.Log.Directory, cli.Log.Long)
+		err = log.Log(db, cli.Log.Directory, cli.Log.Before, cli.Log.After, cli.Log.Long)
 	case "log <session>":
-		err = logSession.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Long)
+		err = logSession.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Before, cli.Log.After, cli.Log.Long)
 	case "fetch <session>":
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)

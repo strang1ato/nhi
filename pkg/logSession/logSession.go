@@ -13,13 +13,16 @@ import (
 )
 
 // Log shows log of commands using less program (in similar manner as git log does)
-func LogSession(db *sql.DB, session, directory string, long bool) error {
+func LogSession(db *sql.DB, session, directory, before, after string, long bool) error {
 	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
 	}
 
-	where := getWhere(directory)
+	where, err := getWhere(directory, before, after)
+	if err != nil {
+		return err
+	}
 
 	var query string
 	if where == "" {
@@ -54,7 +57,7 @@ func LogSession(db *sql.DB, session, directory string, long bool) error {
 	return nil
 }
 
-func getWhere(directory string) string {
+func getWhere(directory, before, after string) (string, error) {
 	var where string
 	if directory != "" {
 		if directory != "/" && directory != "//" {
@@ -62,7 +65,109 @@ func getWhere(directory string) string {
 		}
 		where = fmt.Sprintf("pwd = '%s'", directory)
 	}
-	return where
+
+	if before != "" {
+		beforeSlice := strings.SplitN(before, " ", 2)
+		if len(beforeSlice) != 2 {
+			return "", errors.New("Please specify before date and time correctly")
+		}
+
+		dateSlice := strings.SplitN(beforeSlice[0], "-", 3)
+		if len(dateSlice) != 3 {
+			return "", errors.New("Please specify before date correctly")
+		}
+
+		year, err := strconv.Atoi(dateSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify before year correctly")
+		}
+		month, err := strconv.Atoi(dateSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify before month correctly")
+		}
+		day, err := strconv.Atoi(dateSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify before day correctly")
+		}
+
+		timeSlice := strings.SplitN(beforeSlice[1], ":", 3)
+		if len(timeSlice) != 3 {
+			return "", errors.New("Please specify before time correctly")
+		}
+
+		hour, err := strconv.Atoi(timeSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify before hour correctly")
+		}
+		minute, err := strconv.Atoi(timeSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify before minute correctly")
+		}
+		second, err := strconv.Atoi(timeSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify before second correctly")
+		}
+
+		beforeTime := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Now().Location())
+
+		if where == "" {
+			where = fmt.Sprintf("start_time < '%d'", beforeTime.Unix())
+		} else {
+			where = fmt.Sprintf("%s AND start_time < '%d'", where, beforeTime.Unix())
+		}
+	}
+
+	if after != "" {
+		afterSlice := strings.SplitN(after, " ", 2)
+		if len(afterSlice) != 2 {
+			return "", errors.New("Please specify after date and time correctly")
+		}
+
+		dateSlice := strings.SplitN(afterSlice[0], "-", 3)
+		if len(dateSlice) != 3 {
+			return "", errors.New("Please specify after date correctly")
+		}
+
+		year, err := strconv.Atoi(dateSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify after year correctly")
+		}
+		month, err := strconv.Atoi(dateSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify after month correctly")
+		}
+		day, err := strconv.Atoi(dateSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify after day correctly")
+		}
+
+		timeSlice := strings.SplitN(afterSlice[1], ":", 3)
+		if len(timeSlice) != 3 {
+			return "", errors.New("Please specify after time correctly")
+		}
+
+		hour, err := strconv.Atoi(timeSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify after hour correctly")
+		}
+		minute, err := strconv.Atoi(timeSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify after minute correctly")
+		}
+		second, err := strconv.Atoi(timeSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify after second correctly")
+		}
+
+		afterTime := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Now().Location())
+
+		if where == "" {
+			where = fmt.Sprintf("start_time > '%d'", afterTime.Unix())
+		} else {
+			where = fmt.Sprintf("%s AND start_time > '%d'", where, afterTime.Unix())
+		}
+	}
+	return where, nil
 }
 
 func getContentStrAndLen(rows *sql.Rows, long bool) (string, int, error) {
