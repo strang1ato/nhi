@@ -233,7 +233,7 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory string, long bool
 	contentStr := content.String()
 	contentStrLen := len(contentStr)
 	if contentStrLen == 0 {
-		return "", 0, errors.New("no commands where executed in this shell session")
+		return "", 0, errors.New("no sessions found")
 	}
 	return contentStr, contentStrLen, nil
 }

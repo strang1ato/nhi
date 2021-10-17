@@ -198,7 +198,7 @@ func getContentStrAndLen(rows *sql.Rows, long bool) (string, int, error) {
 	contentStr := content.String()
 	contentStrLen := len(contentStr)
 	if contentStrLen == 0 {
-		return "", 0, errors.New("no commands where executed in this shell session")
+		return "", 0, errors.New("no commands found")
 	}
 	return contentStr, contentStrLen, nil
 }
