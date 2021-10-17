@@ -23,6 +23,8 @@ var cli struct {
 		Session       string `arg required name:"session"`
 		StartEndRange string `arg optional name:"start:end"`
 		Directory     string `short:"d" help:"Only fetch commands that were executed in specified directory"`
+		Before        string `short:"b" help:"Only fetch commands that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\""`
+		After         string `short:"a" help:"Only fetch commands that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\""`
 	} `cmd help:"Fetch shell session, optionally with given range of commands"`
 
 	Rename struct {
@@ -48,13 +50,13 @@ func Run() error {
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
-			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory)
+			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After)
 		}
 	case "fetch <session> <start:end>":
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
-			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory)
+			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After)
 		}
 	case "rename <session> <new-name>":
 		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)

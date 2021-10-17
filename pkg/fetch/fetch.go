@@ -6,12 +6,13 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"database/sql"
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, indicator, startEndRange, directory string) error {
+func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string) error {
 	billion := 1000000000
 	sliceStartEndRange, err := getSliceStartEndRange(startEndRange, billion)
 	if err != nil {
@@ -23,7 +24,10 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory string) error {
 		return err
 	}
 
-	where := getWhere(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator, directory)
+	where, err := getWhere(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator, directory, before, after)
+	if err != nil {
+		return err
+	}
 
 	query := fmt.Sprintf("SELECT PS1, command, output FROM `%s` WHERE %s;", indicator, where)
 
@@ -47,7 +51,7 @@ func getSliceStartEndRange(startEndRange string, billion int) ([]string, error) 
 
 	sliceStartEndRange := strings.SplitN(startEndRange, ":", 2)
 
-	if len(sliceStartEndRange) < 2 {
+	if len(sliceStartEndRange) != 2 {
 		return nil, errors.New("Please specify range of commands properly")
 	}
 
@@ -72,7 +76,7 @@ func getStartAndEndRangeInt(sliceStartEndRange []string) (int, int, error) {
 	return startRangeInt, endRangeInt, nil
 }
 
-func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, directory string) string {
+func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, directory, before, after string) (string, error) {
 	var where string
 	if startRangeInt < billion && endRangeInt < billion {
 		if startRangeInt < 0 && endRangeInt < 0 {
@@ -115,7 +119,101 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 		}
 		where = fmt.Sprintf("%s AND pwd = '%s'", where, directory)
 	}
-	return where
+
+	if before != "" {
+		beforeSlice := strings.SplitN(before, " ", 2)
+		if len(beforeSlice) != 2 {
+			return "", errors.New("Please specify before date and time correctly")
+		}
+
+		dateSlice := strings.SplitN(beforeSlice[0], "-", 3)
+		if len(dateSlice) != 3 {
+			return "", errors.New("Please specify before date correctly")
+		}
+
+		year, err := strconv.Atoi(dateSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify before year correctly")
+		}
+		month, err := strconv.Atoi(dateSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify before month correctly")
+		}
+		day, err := strconv.Atoi(dateSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify before day correctly")
+		}
+
+		timeSlice := strings.SplitN(beforeSlice[1], ":", 3)
+		if len(timeSlice) != 3 {
+			return "", errors.New("Please specify before time correctly")
+		}
+
+		hour, err := strconv.Atoi(timeSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify before hour correctly")
+		}
+		minute, err := strconv.Atoi(timeSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify before minute correctly")
+		}
+		second, err := strconv.Atoi(timeSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify before second correctly")
+		}
+
+		beforeTime := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Now().Location())
+
+		where = fmt.Sprintf("%s AND start_time < '%d'", where, beforeTime.Unix())
+	}
+
+	if after != "" {
+		afterSlice := strings.SplitN(after, " ", 2)
+		if len(afterSlice) != 2 {
+			return "", errors.New("Please specify after date and time correctly")
+		}
+
+		dateSlice := strings.SplitN(afterSlice[0], "-", 3)
+		if len(dateSlice) != 3 {
+			return "", errors.New("Please specify after date correctly")
+		}
+
+		year, err := strconv.Atoi(dateSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify after year correctly")
+		}
+		month, err := strconv.Atoi(dateSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify after month correctly")
+		}
+		day, err := strconv.Atoi(dateSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify after day correctly")
+		}
+
+		timeSlice := strings.SplitN(afterSlice[1], ":", 3)
+		if len(timeSlice) != 3 {
+			return "", errors.New("Please specify after time correctly")
+		}
+
+		hour, err := strconv.Atoi(timeSlice[0])
+		if err != nil {
+			return "", errors.New("Please specify after hour correctly")
+		}
+		minute, err := strconv.Atoi(timeSlice[1])
+		if err != nil {
+			return "", errors.New("Please specify after minute correctly")
+		}
+		second, err := strconv.Atoi(timeSlice[2])
+		if err != nil {
+			return "", errors.New("Please specify after second correctly")
+		}
+
+		afterTime := time.Date(year, time.Month(month), day, hour, minute, second, 0, time.Now().Location())
+
+		where = fmt.Sprintf("%s AND start_time > '%d'", where, afterTime.Unix())
+	}
+	return where, nil
 }
 
 func printRows(db *sql.DB, rows *sql.Rows) error {
@@ -152,7 +250,7 @@ func printRows(db *sql.DB, rows *sql.Rows) error {
 					stderrOutput = nil
 				}
 			} else if character == 253 {
-				if err := Fetch(db, string(output[i+1:i+12]), ":", ""); err != nil {
+				if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", ""); err != nil {
 					return err
 				}
 				copy(output[i+1:i+12], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
