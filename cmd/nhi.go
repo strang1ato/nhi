@@ -15,22 +15,22 @@ import (
 var cli struct {
 	Log struct {
 		Session   string `arg optional name:"session"`
-		Directory string `short:"d" help:"Only show commands that were executed in specified directory"`
-		Long      bool   `short:"l" help:"Use a long listing format"`
+		Directory string `short:"d" help:"Only show sessions where commands were executed in specified directory."`
+		Long      bool   `short:"l" help:"Use a long listing format."`
 	} `cmd help:"Show logs"`
 
 	Fetch struct {
 		Session       string `arg required name:"session"`
 		StartEndRange string `arg optional name:"start:end"`
-		Directory     string `short:"d" help:"Only fetch commands that were executed in specified directory"`
-		Before        string `short:"b" help:"Only fetch commands that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\""`
-		After         string `short:"a" help:"Only fetch commands that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\""`
-	} `cmd help:"Fetch shell session, optionally with given range of commands"`
+		Directory     string `short:"d" help:"Only fetch commands that were executed in specified directory."`
+		Before        string `short:"b" help:"Only fetch commands that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After         string `short:"a" help:"Only fetch commands that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+	} `cmd help:"Fetch shell session, optionally with given range of commands."`
 
 	Rename struct {
 		Session string `arg required name:"session"`
 		NewName string `arg required name:"new-name"`
-	} `cmd help:"Rename shell session"`
+	} `cmd help:"Rename shell session."`
 }
 
 // Run runs nhi
