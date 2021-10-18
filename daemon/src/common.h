@@ -1,5 +1,5 @@
-#define SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES 256
-#define CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES 1024
+#define SHELLS_MAX_ENTRIES 256
+#define CHILDREN_MAX_ENTRIES 1024
 #define RING_BUFFER_MAX_ENTRIES 1024*1024
 
 #define KSYS_WRITE_EVENT_SIZE 32*1024
@@ -29,13 +29,13 @@ struct write_event {  // realistically at least size 11
   char output[];
 };
 
-struct shell_pid_and_indicator {
+struct shell {
   pid_t shell_pid;
   long indicator;
   char ***environ_address;
 };
 
-struct child_pid_and_shell_pid {
+struct child {
   pid_t child_pid;
   pid_t shell_pid;
 };

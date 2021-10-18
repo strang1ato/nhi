@@ -8,18 +8,18 @@
 
 char LICENSE[] SEC("license") = "GPL";
 
-struct bpf_map_def SEC("maps") shell_pids_and_indicators = {
+struct bpf_map_def SEC("maps") shells = {
   .type = BPF_MAP_TYPE_ARRAY,
   .key_size = 4,
-  .value_size = sizeof(struct shell_pid_and_indicator),
-  .max_entries = SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES,
+  .value_size = sizeof(struct shell),
+  .max_entries = SHELLS_MAX_ENTRIES,
 };
 
-struct bpf_map_def SEC("maps") child_pids_and_shell_pids = {
+struct bpf_map_def SEC("maps") children = {
   .type = BPF_MAP_TYPE_ARRAY,
   .key_size = 4,
-  .value_size = sizeof(struct child_pid_and_shell_pid),
-  .max_entries = CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES,
+  .value_size = sizeof(struct child),
+  .max_entries = CHILDREN_MAX_ENTRIES,
 };
 
 struct bpf_map_def SEC("maps") ring_buffer = {
@@ -60,26 +60,26 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
   pid_t parent_shell_pid = 0;
   long parent_shell_indicator = 0;
   if (sig == SIGUSR1) {
-    // remove element where shell_pid from child_pids_and_shell_pids
+    // remove element where shell_pid from children
     int i = 0;
-    struct child_pid_and_shell_pid zero = {0};
+    struct child zero = {0};
     int pid_index = -1;
-    for (int j = 0; j<CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES; j++) {
-      struct child_pid_and_shell_pid *child_pid_and_shell_pid;
-      child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-      if (child_pid_and_shell_pid) {
-        if (child_pid_and_shell_pid->child_pid == shell_pid) {
+    for (int j = 0; j<CHILDREN_MAX_ENTRIES; j++) {
+      struct child *child;
+      child = bpf_map_lookup_elem(&children, &i);
+      if (child) {
+        if (child->child_pid == shell_pid) {
           pid_index = i;
 
-          parent_shell_pid = child_pid_and_shell_pid->shell_pid;
-        } else if (!child_pid_and_shell_pid->child_pid) {
+          parent_shell_pid = child->shell_pid;
+        } else if (!child->child_pid) {
           if (pid_index != -1) {
             i--;
-            child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-            if (child_pid_and_shell_pid) {
-              bpf_map_update_elem(&child_pids_and_shell_pids, &pid_index, child_pid_and_shell_pid, BPF_ANY);
+            child = bpf_map_lookup_elem(&children, &i);
+            if (child) {
+              bpf_map_update_elem(&children, &pid_index, child, BPF_ANY);
             }
-            bpf_map_update_elem(&child_pids_and_shell_pids, &i, &zero, BPF_ANY);
+            bpf_map_update_elem(&children, &i, &zero, BPF_ANY);
           }
           break;
         }
@@ -89,16 +89,16 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
 
     // find indicator of the parent shell
     i = 0;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      struct shell_pid_and_indicator *shell_pid_and_indicator;
-      shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
-      if (shell_pid_and_indicator) {
-        if (!shell_pid_and_indicator->shell_pid) {
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      struct shell *shell;
+      shell = bpf_map_lookup_elem(&shells, &i);
+      if (shell) {
+        if (!shell->shell_pid) {
           break;
         }
 
-        if (shell_pid_and_indicator->shell_pid == parent_shell_pid) {
-          parent_shell_indicator = shell_pid_and_indicator->indicator;
+        if (shell->shell_pid == parent_shell_pid) {
+          parent_shell_indicator = shell->indicator;
           break;
         }
       }
@@ -122,16 +122,16 @@ SEC("fexit/kernel_clone")
 int BPF_PROG(kernel_clone_ret, struct kernel_clone_args *args, pid_t new_child_pid)
 {
   pid_t parent_pid = bpf_get_current_pid_tgid() >> 32;
-  // add new_child_pid to child_pids_and_shell_pids if parent_pid in shell_pids_and_indicators
+  // add new_child_pid to children if parent_pid in shells
   {
-    struct shell_pid_and_indicator *shell_pid_and_indicator;
+    struct shell *shell;
     int i = 0;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
-      if (shell_pid_and_indicator) {
-        if (!shell_pid_and_indicator->shell_pid) {
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      shell = bpf_map_lookup_elem(&shells, &i);
+      if (shell) {
+        if (!shell->shell_pid) {
           break;
-        } else if (shell_pid_and_indicator->shell_pid == parent_pid) {
+        } else if (shell->shell_pid == parent_pid) {
           goto add_new_child_pid;
         }
       }
@@ -139,17 +139,17 @@ int BPF_PROG(kernel_clone_ret, struct kernel_clone_args *args, pid_t new_child_p
     }
   }
 
-  // add new_child_pid to child_pids_and_shell_pids if parent_pid in child_pids_and_shell_pids
+  // add new_child_pid to children if parent_pid in children
   {
-    struct child_pid_and_shell_pid *child_pid_and_shell_pid;
+    struct child *child;
     int i = 0;
-    for (int j = 0; j<CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES; j++) {
-      child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-      if (child_pid_and_shell_pid) {
-        if (!child_pid_and_shell_pid->child_pid) {
+    for (int j = 0; j<CHILDREN_MAX_ENTRIES; j++) {
+      child = bpf_map_lookup_elem(&children, &i);
+      if (child) {
+        if (!child->child_pid) {
           return 0;
-        } else if (child_pid_and_shell_pid->child_pid == parent_pid) {
-          parent_pid = child_pid_and_shell_pid->shell_pid;
+        } else if (child->child_pid == parent_pid) {
+          parent_pid = child->shell_pid;
           goto add_new_child_pid;
         }
       }
@@ -159,14 +159,14 @@ int BPF_PROG(kernel_clone_ret, struct kernel_clone_args *args, pid_t new_child_p
 
 add_new_child_pid: {
     int i = 0;
-    for (int j = 0; j<CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES; j++) {
-      struct child_pid_and_shell_pid *child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-      if (child_pid_and_shell_pid) {
-        if (!child_pid_and_shell_pid->child_pid) {
-          struct child_pid_and_shell_pid helper;
+    for (int j = 0; j<CHILDREN_MAX_ENTRIES; j++) {
+      struct child *child = bpf_map_lookup_elem(&children, &i);
+      if (child) {
+        if (!child->child_pid) {
+          struct child helper;
           helper.child_pid = new_child_pid;
           helper.shell_pid = parent_pid;
-          bpf_map_update_elem(&child_pids_and_shell_pids, &i, &helper, BPF_ANY);
+          bpf_map_update_elem(&children, &i, &helper, BPF_ANY);
 
           pid_t *shell_pid = bpf_ringbuf_reserve(&ring_buffer, sizeof(pid_t), 0);
           if (!shell_pid) {
@@ -187,33 +187,33 @@ SEC("fentry/do_exit")
 int BPF_PROG(do_exit, long code)
 {
   pid_t current_pid = bpf_get_current_pid_tgid() >> 32;
-  // remove element where current_pid, from shell_pids_and_indicators
+  // remove element where current_pid, from shells
   {
     int i = 0;
     int pid_index = -1;
 
     long indicator;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      struct shell_pid_and_indicator *shell_pid_and_indicator;
-      shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
-      if (shell_pid_and_indicator) {
-        if (!i && !shell_pid_and_indicator->shell_pid) {
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      struct shell *shell;
+      shell = bpf_map_lookup_elem(&shells, &i);
+      if (shell) {
+        if (!i && !shell->shell_pid) {
           return 0;
         }
 
-        if (shell_pid_and_indicator->shell_pid == current_pid) {
+        if (shell->shell_pid == current_pid) {
           pid_index = i;
 
-          indicator = shell_pid_and_indicator->indicator;
-        } else if (!shell_pid_and_indicator->shell_pid) {
+          indicator = shell->indicator;
+        } else if (!shell->shell_pid) {
           if (pid_index != -1) {
             i--;
-            shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
-            if (shell_pid_and_indicator) {
-              bpf_map_update_elem(&shell_pids_and_indicators, &pid_index, shell_pid_and_indicator, BPF_ANY);
+            shell = bpf_map_lookup_elem(&shells, &i);
+            if (shell) {
+              bpf_map_update_elem(&shells, &pid_index, shell, BPF_ANY);
             }
-            struct shell_pid_and_indicator zero = {0};
-            bpf_map_update_elem(&shell_pids_and_indicators, &i, &zero, BPF_ANY);
+            struct shell zero = {0};
+            bpf_map_update_elem(&shells, &i, &zero, BPF_ANY);
 
             struct exit_shell_indicator_event *exit_shell_indicator_event = bpf_ringbuf_reserve(&ring_buffer, sizeof(struct exit_shell_indicator_event), 0);
             if (!exit_shell_indicator_event) {
@@ -230,25 +230,25 @@ int BPF_PROG(do_exit, long code)
     }
   }
 
-  // remove element where current_pid, from child_pids_and_shell_pids
+  // remove element where current_pid, from children
   {
     int i = 0;
     int pid_index = -1;
-    for (int j = 0; j<CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES; j++) {
-      struct child_pid_and_shell_pid *child_pid_and_shell_pid;
-      child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-      if (child_pid_and_shell_pid) {
-        if (child_pid_and_shell_pid->child_pid == current_pid) {
+    for (int j = 0; j<CHILDREN_MAX_ENTRIES; j++) {
+      struct child *child;
+      child = bpf_map_lookup_elem(&children, &i);
+      if (child) {
+        if (child->child_pid == current_pid) {
           pid_index = i;
-        } else if (!child_pid_and_shell_pid->child_pid) {
+        } else if (!child->child_pid) {
           if (pid_index != -1) {
             i--;
-            child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-            if (child_pid_and_shell_pid) {
-              bpf_map_update_elem(&child_pids_and_shell_pids, &pid_index, child_pid_and_shell_pid, BPF_ANY);
+            child = bpf_map_lookup_elem(&children, &i);
+            if (child) {
+              bpf_map_update_elem(&children, &pid_index, child, BPF_ANY);
             }
-            struct child_pid_and_shell_pid zero = {0};
-            bpf_map_update_elem(&child_pids_and_shell_pids, &i, &zero, BPF_ANY);
+            struct child zero = {0};
+            bpf_map_update_elem(&children, &i, &zero, BPF_ANY);
           }
           return 0;
         }
@@ -271,16 +271,16 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
   pid_t shell_pid;
   {
     int i = 0;
-    for (int j = 0; j<CHILD_PIDS_AND_SHELL_PIDS_MAX_ENTRIES; j++) {
-      struct child_pid_and_shell_pid *child_pid_and_shell_pid;
-      child_pid_and_shell_pid = bpf_map_lookup_elem(&child_pids_and_shell_pids, &i);
-      if (child_pid_and_shell_pid) {
-        if (!child_pid_and_shell_pid->child_pid) {
+    for (int j = 0; j<CHILDREN_MAX_ENTRIES; j++) {
+      struct child *child;
+      child = bpf_map_lookup_elem(&children, &i);
+      if (child) {
+        if (!child->child_pid) {
           return 0;
         }
 
-        if (child_pid_and_shell_pid->child_pid == current_pid) {
-          shell_pid = child_pid_and_shell_pid->shell_pid;
+        if (child->child_pid == current_pid) {
+          shell_pid = child->shell_pid;
           break;
         }
       }
@@ -292,16 +292,16 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
   long indicator = 0;
   {
     int i = 0;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      struct shell_pid_and_indicator *shell_pid_and_indicator;
-      shell_pid_and_indicator = bpf_map_lookup_elem(&shell_pids_and_indicators, &i);
-      if (shell_pid_and_indicator) {
-        if (!shell_pid_and_indicator->shell_pid) {
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      struct shell *shell;
+      shell = bpf_map_lookup_elem(&shells, &i);
+      if (shell) {
+        if (!shell->shell_pid) {
           return 0;
         }
 
-        if (shell_pid_and_indicator->shell_pid == shell_pid) {
-          indicator = shell_pid_and_indicator->indicator;
+        if (shell->shell_pid == shell_pid) {
+          indicator = shell->indicator;
           break;
         }
       }

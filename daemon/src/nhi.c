@@ -20,7 +20,7 @@ sqlite3 *db;
 
 struct bpf_object *bpf_object;
 
-int shell_pids_and_indicators_fd;
+int shells_fd;
 
 char **__environ, **original_environ;
 
@@ -72,16 +72,16 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   meta_create_row(db, indicator);
 
   int i = 0;
-  for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-    struct shell_pid_and_indicator shell_pid_and_indicator;
-    bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
-    if (!shell_pid_and_indicator.shell_pid) {
+  for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+    struct shell shell;
+    bpf_map_lookup_elem(shells_fd, &i, &shell);
+    if (!shell.shell_pid) {
       break;
     }
     i++;
   }
 
-  struct shell_pid_and_indicator helper;
+  struct shell helper;
   helper.shell_pid = kill_event->shell_pid;
   helper.indicator = indicator;
   helper.environ_address = get_shell_environ_address(kill_event->shell_pid);
@@ -97,7 +97,7 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
 
   reverse_environ();
 
-  bpf_map_update_elem(shell_pids_and_indicators_fd, &i, &helper, BPF_ANY);
+  bpf_map_update_elem(shells_fd, &i, &helper, BPF_ANY);
 }
 
 char ***get_shell_environ_address(pid_t shell_pid)
@@ -239,12 +239,12 @@ void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
   char ***environ_address = 0;
   {
     int i = 0;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      struct shell_pid_and_indicator shell_pid_and_indicator;
-      bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
-      if (shell_pid_and_indicator.shell_pid == kill_event->shell_pid) {
-        indicator = shell_pid_and_indicator.indicator;
-        environ_address = shell_pid_and_indicator.environ_address;
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      struct shell shell;
+      bpf_map_lookup_elem(shells_fd, &i, &shell);
+      if (shell.shell_pid == kill_event->shell_pid) {
+        indicator = shell.indicator;
+        environ_address = shell.environ_address;
         break;
       }
       i++;
@@ -270,11 +270,11 @@ void handle_child_creation(pid_t *shell_pid)
   long indicator = 0;
   {
     int i = 0;
-    for (int j = 0; j<SHELL_PIDS_AND_INDICATORS_MAX_ENTRIES; j++) {
-      struct shell_pid_and_indicator shell_pid_and_indicator;
-      bpf_map_lookup_elem(shell_pids_and_indicators_fd, &i, &shell_pid_and_indicator);
-      if (shell_pid_and_indicator.shell_pid == *shell_pid) {
-        indicator = shell_pid_and_indicator.indicator;
+    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+      struct shell shell;
+      bpf_map_lookup_elem(shells_fd, &i, &shell);
+      if (shell.shell_pid == *shell_pid) {
+        indicator = shell.indicator;
         break;
       }
       i++;
@@ -345,9 +345,9 @@ int main()
     free(bpf_link);
   }
 
-  shell_pids_and_indicators_fd = bpf_object__find_map_fd_by_name(bpf_object, "shell_pids_and_indicators");
-  if (shell_pids_and_indicators_fd == -EINVAL) {
-    write_log("Failed to find shell_pids_and_indicators map");
+  shells_fd = bpf_object__find_map_fd_by_name(bpf_object, "shells");
+  if (shells_fd == -EINVAL) {
+    write_log("Failed to find shells map");
     return 0;
   }
 
