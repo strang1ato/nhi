@@ -288,25 +288,23 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     }
   }
 
-  // find indicator of the shell
   long indicator = 0;
-  {
-    int i = 0;
-    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
-      struct shell *shell;
-      shell = bpf_map_lookup_elem(&shells, &i);
-      if (shell) {
-        if (!shell->shell_pid) {
-          return 0;
-        }
-
-        if (shell->shell_pid == shell_pid) {
-          indicator = shell->indicator;
-          break;
-        }
+  int shell_index = 0;
+  // find indicator of the shell
+  for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+    struct shell *shell;
+    shell = bpf_map_lookup_elem(&shells, &shell_index);
+    if (shell) {
+      if (!shell->shell_pid) {
+        return 0;
       }
-      i++;
+
+      if (shell->shell_pid == shell_pid) {
+        indicator = shell->indicator;
+        break;
+      }
     }
+    shell_index++;
   }
 
   int zero = 0;
@@ -352,6 +350,43 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     write_event->output[0] = specificity;
     if (buf) {
       bpf_probe_read_user(write_event->output+1, count, buf);
+    }
+
+    // look for and handle alternate screen escape sequences if any
+    for (int i=1; i<512; i++) {
+      if (i == count) {
+        break;
+      }
+
+      if (write_event->output[i] == 27 && write_event->output[i+1] == '[' && write_event->output[i+2] == '?' && write_event->output[i+3] == '1' && write_event->output[i+4] == '0' && write_event->output[i+5] == '4' && write_event->output[i+6] == '9') {
+        struct shell *helper;
+        helper = bpf_map_lookup_elem(&shells, &shell_index);
+        if (!helper) {
+          return 0;
+        }
+        if (write_event->output[i+7] == 'h') {
+          helper->omit_write = 1;
+          bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
+          return 0;
+        } else if (write_event->output[i+7] == 'l') {
+          helper->omit_write = 0;
+          bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
+          write_event->output[i] = 0;
+          write_event->output[i+1] = 0;
+          write_event->output[i+2] = 0;
+          write_event->output[i+3] = 0;
+          write_event->output[i+4] = 0;
+          write_event->output[i+5] = 0;
+          write_event->output[i+6] = 0;
+          write_event->output[i+7] = 0;
+        }
+      }
+    }
+
+    struct shell *shell;
+    shell = bpf_map_lookup_elem(&shells, &shell_index);
+    if (shell && shell->omit_write == 1) {
+      return 0;
     }
 
     if (count == 7) {
