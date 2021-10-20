@@ -1,6 +1,7 @@
 package rename
 
 import (
+	"errors"
 	"fmt"
 
 	"database/sql"
@@ -15,7 +16,29 @@ func Rename(db *sql.DB, session, newName string) error {
 		return err
 	}
 
+	if newName == "meta" {
+		return errors.New("Session can't be named meta")
+	}
+
+	if err := checkIfNameIsUsed(db, newName); err != nil {
+		return err
+	}
+
 	query := fmt.Sprintf("UPDATE `meta` SET name='%s' WHERE indicator = '%s';", newName, indicator)
 	_, err = db.Exec(query)
 	return err
+}
+
+func checkIfNameIsUsed(db *sql.DB, newName string) error {
+	query := fmt.Sprintf("SELECT indicator FROM meta WHERE name = '%s';", newName)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return err
+	}
+
+	if rows.Next() {
+		return errors.New("The session name is already in use")
+	}
+	return nil
 }
