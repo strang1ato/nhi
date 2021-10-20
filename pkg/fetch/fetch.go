@@ -12,7 +12,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string, fetchChildShells bool) error {
+func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string, fetchChildShells, stderrInRed bool) error {
 	billion := 1000000000
 	sliceStartEndRange, err := getSliceStartEndRange(startEndRange, billion)
 	if err != nil {
@@ -39,7 +39,7 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string
 		return err
 	}
 
-	if err := printRows(db, rows, fetchChildShells); err != nil {
+	if err := printRows(db, rows, fetchChildShells, stderrInRed); err != nil {
 		return err
 	}
 	return nil
@@ -216,7 +216,7 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 	return where, nil
 }
 
-func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells bool) error {
+func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells, stderrInRed bool) error {
 	for rows.Next() {
 		var PS1, command string
 		var output []byte
@@ -237,7 +237,11 @@ func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells bool) error {
 					fmt.Print(string(stdoutOutput))
 					stdoutOutput = nil
 				} else if len(stderrOutput) > 0 {
-					fmt.Fprint(os.Stderr, string(stderrOutput))
+					if stderrInRed {
+						fmt.Fprint(os.Stderr, "\x1b[31m"+string(stderrOutput)+"\x1b[0m")
+					} else {
+						fmt.Fprint(os.Stderr, string(stderrOutput))
+					}
 					stderrOutput = nil
 				}
 			} else if character == 254 {
@@ -246,12 +250,16 @@ func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells bool) error {
 					fmt.Print(string(stdoutOutput))
 					stdoutOutput = nil
 				} else if len(stderrOutput) > 0 {
-					fmt.Fprint(os.Stderr, string(stderrOutput))
+					if stderrInRed {
+						fmt.Fprint(os.Stderr, "\x1b[31m"+string(stderrOutput)+"\x1b[0m")
+					} else {
+						fmt.Fprint(os.Stderr, string(stderrOutput))
+					}
 					stderrOutput = nil
 				}
 			} else if character == 253 {
 				if fetchChildShells {
-					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", true); err != nil {
+					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", true, stderrInRed); err != nil {
 						return err
 					}
 				}
@@ -268,7 +276,11 @@ func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells bool) error {
 			fmt.Print(string(stdoutOutput))
 			stdoutOutput = nil
 		} else if len(stderrOutput) > 0 {
-			fmt.Fprint(os.Stderr, string(stderrOutput))
+			if stderrInRed {
+				fmt.Fprint(os.Stderr, "\x1b[31m"+string(stderrOutput)+"\x1b[0m")
+			} else {
+				fmt.Fprint(os.Stderr, string(stderrOutput))
+			}
 			stderrOutput = nil
 		}
 	}

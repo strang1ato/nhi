@@ -28,6 +28,7 @@ var cli struct {
 		Before           string `short:"b" help:"Only fetch commands that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		After            string `short:"a" help:"Only fetch commands that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		FetchChildShells bool   `short:"f" help:"Fetch content of shells executed within the session."`
+		StderrInRed      bool   `short:"r" help:"Show errors in red color."`
 	} `cmd help:"Fetch shell session, optionally with given range of commands."`
 
 	Rename struct {
@@ -53,13 +54,13 @@ func Run() error {
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
-			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After, cli.Fetch.FetchChildShells)
+			err = fetch.Fetch(db, indicator, ":", cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After, cli.Fetch.FetchChildShells, cli.Fetch.StderrInRed)
 		}
 	case "fetch <session> <start:end>":
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
 		if err == nil {
-			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After, cli.Fetch.FetchChildShells)
+			err = fetch.Fetch(db, indicator, cli.Fetch.StartEndRange, cli.Fetch.Directory, cli.Fetch.Before, cli.Fetch.After, cli.Fetch.FetchChildShells, cli.Fetch.StderrInRed)
 		}
 	case "rename <session> <new-name>":
 		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)
