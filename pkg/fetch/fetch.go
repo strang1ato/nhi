@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"database/sql"
+
+	"github.com/strang1ato/nhi/pkg/utils"
 )
 
 // Fetch retrieves shell session optionally with given range of commands
@@ -77,41 +79,7 @@ func getStartAndEndRangeInt(sliceStartEndRange []string) (int, int, error) {
 }
 
 func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, directory, before, after string) (string, error) {
-	var where string
-	if startRangeInt < billion && endRangeInt < billion {
-		if startRangeInt < 0 && endRangeInt < 0 {
-			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
-		} else if startRangeInt < 0 {
-			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s",
-				sliceStartEndRange[0], indicator, sliceStartEndRange[1])
-		} else if endRangeInt < 0 {
-			where = fmt.Sprintf("rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], sliceStartEndRange[1], indicator)
-		} else {
-			where = fmt.Sprintf("rowid > %s AND rowid <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
-	} else if startRangeInt < billion {
-		if startRangeInt < 0 {
-			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s",
-				sliceStartEndRange[0], indicator, sliceStartEndRange[1])
-		} else {
-			where = fmt.Sprintf("rowid > %s AND indicator <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
-	} else if endRangeInt < billion {
-		if endRangeInt < 0 {
-			where = fmt.Sprintf("indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], sliceStartEndRange[1], indicator)
-		} else {
-			where = fmt.Sprintf("indicator >= %s AND rowid <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
-	} else {
-		where = fmt.Sprintf("indicator >= %s AND indicator <= %s",
-			sliceStartEndRange[0], sliceStartEndRange[1])
-	}
+	where := utils.GetWhereFromSliceEnd(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator)
 
 	if directory != "" {
 		if directory != "/" && directory != "//" {
