@@ -12,7 +12,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string) error {
+func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string, fetchChildShells bool) error {
 	billion := 1000000000
 	sliceStartEndRange, err := getSliceStartEndRange(startEndRange, billion)
 	if err != nil {
@@ -39,7 +39,7 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string
 		return err
 	}
 
-	if err := printRows(db, rows); err != nil {
+	if err := printRows(db, rows, fetchChildShells); err != nil {
 		return err
 	}
 	return nil
@@ -216,7 +216,7 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 	return where, nil
 }
 
-func printRows(db *sql.DB, rows *sql.Rows) error {
+func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells bool) error {
 	for rows.Next() {
 		var PS1, command string
 		var output []byte
@@ -250,8 +250,10 @@ func printRows(db *sql.DB, rows *sql.Rows) error {
 					stderrOutput = nil
 				}
 			} else if character == 253 {
-				if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", ""); err != nil {
-					return err
+				if fetchChildShells {
+					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", true); err != nil {
+						return err
+					}
 				}
 				copy(output[i+1:i+12], []byte{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0})
 			} else {
