@@ -10,7 +10,7 @@ nhid_pid="$!"
 sleep 5
 
 echo export PS1=\"my_prompt \" >> ~/.bashrc
-echo source $PWD/.nhi/nhi.bash >> ~/.bashrc
+echo source $PWD/shell/nhi.bash >> ~/.bashrc
 
 ./testing/expect-test || true
 
