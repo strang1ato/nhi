@@ -16,12 +16,12 @@ import (
 // Fetch retrieves shell session optionally with given range of commands
 func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string, fetchChildShells, stderrInRed bool) error {
 	billion := 1000000000
-	sliceStartEndRange, err := getSliceStartEndRange(startEndRange, billion)
+	sliceStartEndRange, err := utils.GetSliceStartEndRange(startEndRange, billion)
 	if err != nil {
 		return err
 	}
 
-	startRangeInt, endRangeInt, err := getStartAndEndRangeInt(sliceStartEndRange)
+	startRangeInt, endRangeInt, err := utils.GetStartAndEndRangeInt(sliceStartEndRange)
 	if err != nil {
 		return err
 	}
@@ -47,39 +47,42 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string
 	return nil
 }
 
-func getSliceStartEndRange(startEndRange string, billion int) ([]string, error) {
-	startEndRange = strings.TrimPrefix(startEndRange, "{")
-	startEndRange = strings.TrimSuffix(startEndRange, "}")
-
-	sliceStartEndRange := strings.SplitN(startEndRange, ":", 2)
-
-	if len(sliceStartEndRange) != 2 {
-		return nil, errors.New("Please specify range of commands properly")
-	}
-
-	if sliceStartEndRange[0] == "" {
-		sliceStartEndRange[0] = "0"
-	}
-	if sliceStartEndRange[1] == "" {
-		sliceStartEndRange[1] = strconv.Itoa(billion - 1)
-	}
-	return sliceStartEndRange, nil
-}
-
-func getStartAndEndRangeInt(sliceStartEndRange []string) (int, int, error) {
-	startRangeInt, err := strconv.Atoi(sliceStartEndRange[0])
-	if err != nil {
-		return 0, 0, errors.New("Start range is not a number")
-	}
-	endRangeInt, err := strconv.Atoi(sliceStartEndRange[1])
-	if err != nil {
-		return 0, 0, errors.New("End range is not a number")
-	}
-	return startRangeInt, endRangeInt, nil
-}
-
 func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, directory, before, after string) (string, error) {
-	where := utils.GetWhereFromSliceEnd(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator)
+	var where string
+	if startRangeInt < billion && endRangeInt < billion {
+		if startRangeInt < 0 && endRangeInt < 0 {
+			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
+				sliceStartEndRange[0], indicator, sliceStartEndRange[1], indicator)
+		} else if startRangeInt < 0 {
+			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s",
+				sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+		} else if endRangeInt < 0 {
+			where = fmt.Sprintf("rowid > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
+				sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+		} else {
+			where = fmt.Sprintf("rowid > %s AND rowid <= %s",
+				sliceStartEndRange[0], sliceStartEndRange[1])
+		}
+	} else if startRangeInt < billion {
+		if startRangeInt < 0 {
+			where = fmt.Sprintf("rowid >= (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s",
+				sliceStartEndRange[0], indicator, sliceStartEndRange[1])
+		} else {
+			where = fmt.Sprintf("rowid > %s AND indicator <= %s",
+				sliceStartEndRange[0], sliceStartEndRange[1])
+		}
+	} else if endRangeInt < billion {
+		if endRangeInt < 0 {
+			where = fmt.Sprintf("indicator >= %s AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
+				sliceStartEndRange[0], sliceStartEndRange[1], indicator)
+		} else {
+			where = fmt.Sprintf("indicator >= %s AND rowid <= %s",
+				sliceStartEndRange[0], sliceStartEndRange[1])
+		}
+	} else {
+		where = fmt.Sprintf("indicator >= %s AND indicator <= %s",
+			sliceStartEndRange[0], sliceStartEndRange[1])
+	}
 
 	if directory != "" {
 		if directory != "/" && directory != "//" {

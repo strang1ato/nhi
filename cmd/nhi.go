@@ -7,6 +7,7 @@ import (
 	"github.com/strang1ato/nhi/pkg/fetch"
 	"github.com/strang1ato/nhi/pkg/log"
 	"github.com/strang1ato/nhi/pkg/logSession"
+	"github.com/strang1ato/nhi/pkg/remove"
 	"github.com/strang1ato/nhi/pkg/rename"
 	"github.com/strang1ato/nhi/pkg/utils"
 )
@@ -35,6 +36,10 @@ var cli struct {
 		Session string `arg required name:"session"`
 		NewName string `arg required name:"new-name"`
 	} `cmd help:"Rename shell session."`
+
+	Remove struct {
+		StartEndRange string `arg required name:"start:end"`
+	} `cmd help:"Remove range of shell sessions."`
 }
 
 // Run runs nhi
@@ -64,6 +69,8 @@ func Run() error {
 		}
 	case "rename <session> <new-name>":
 		err = rename.Rename(db, cli.Rename.Session, cli.Rename.NewName)
+	case "remove <start:end>":
+		err = remove.Remove(db, cli.Remove.StartEndRange)
 	default:
 		err = errors.New("Command not found")
 	}
