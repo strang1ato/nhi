@@ -8,9 +8,11 @@
 
 #define SIGUSR1 10
 #define SIGUSR2 12
+#define SIGRTMIN 34
 
 #define ENVIRON_AMOUNT_OF_VARIABLES 512
 #define ENVIRON_ELEMENT_SIZE 512
+#define LOCAL_ENVIRON_AMOUNT_OF_VARIABLES 3
 
 typedef int pid_t;
 

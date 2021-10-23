@@ -25,11 +25,11 @@ int shells_fd;
 char **__environ, **original_environ;
 
 int handle_event(void *, void *, size_t);
-void handle_kill_SIGUSR1(struct kill_event *);
-char ***get_shell_environ_address(pid_t);
+void handle_kill_SIGUSR(struct kill_event *);
+char ***get_shell_environ_address(pid_t, int);
 void get_shell_environ(pid_t, char ***);
 void reverse_environ(void);
-void handle_kill_SIGUSR2(struct kill_event *, size_t);
+void handle_kill_SIGRTMIN(struct kill_event *, size_t);
 void handle_child_creation(pid_t *);
 void handle_shell_exit(struct exit_shell_indicator_event *);
 void handle_write(struct write_event *, size_t);
@@ -41,10 +41,10 @@ int handle_event(void *ctx, void *data, size_t data_sz)
 {
   if (data_sz == sizeof(struct kill_event)) {
     struct kill_event *kill_event = data;
-    if (kill_event->sig == SIGUSR1) {
-      handle_kill_SIGUSR1(kill_event);
-    } else if (kill_event->sig == SIGUSR2) {
-      handle_kill_SIGUSR2(kill_event, data_sz);
+    if (kill_event->sig == SIGUSR1 || kill_event->sig == SIGUSR2) {
+      handle_kill_SIGUSR(kill_event);
+    } else if (kill_event->sig == SIGRTMIN) {
+      handle_kill_SIGRTMIN(kill_event, data_sz);
     }
   } else if (data_sz == sizeof(pid_t)) {
     handle_child_creation(data);
@@ -56,7 +56,7 @@ int handle_event(void *ctx, void *data, size_t data_sz)
   return 0;
 }
 
-void handle_kill_SIGUSR1(struct kill_event *kill_event)
+void handle_kill_SIGUSR(struct kill_event *kill_event)
 {
   long indicator = get_indicator();
   if (kill_event->parent_shell_indicator) {
@@ -84,9 +84,9 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   struct shell helper;
   helper.shell_pid = kill_event->shell_pid;
   helper.indicator = indicator;
-  helper.environ_address = get_shell_environ_address(kill_event->shell_pid);
+  helper.environ_address = get_shell_environ_address(kill_event->shell_pid, kill_event->sig);
   if (!helper.environ_address) {
-    write_log("get_shell_environ_address failed at handle_kill_SIGUSR1");
+    write_log("get_shell_environ_address failed at handle_kill_SIGUSR");
     return;
   }
 
@@ -100,11 +100,17 @@ void handle_kill_SIGUSR1(struct kill_event *kill_event)
   bpf_map_update_elem(shells_fd, &i, &helper, BPF_ANY);
 }
 
-char ***get_shell_environ_address(pid_t shell_pid)
+char ***get_shell_environ_address(pid_t shell_pid, int signum)
 {
   char environ_offset_str[32];
   {
-    FILE *process = popen("objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'", "r");
+    char command[128];
+    if (signum == SIGUSR1) {
+      strcpy(command, "objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
+    } else if (signum == SIGUSR2) {
+      strcpy(command, "objdump -tT $(which zsh) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
+    }
+    FILE *process = popen(command, "r");
     if (!process) {
       write_log("popen at get_shell_environ_address failed");
       return 0;
@@ -183,6 +189,7 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
     environ_pointer = local[0].iov_base;
   }
 
+  char **__environ_addresses;
   {
     struct iovec local[1];
     local[0].iov_base = calloc(ENVIRON_AMOUNT_OF_VARIABLES, sizeof(char *));
@@ -192,7 +199,7 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
     remote[0].iov_base = *environ_pointer;
     remote[0].iov_len = ENVIRON_AMOUNT_OF_VARIABLES;
 
-    __environ = local[0].iov_base;
+    __environ_addresses = local[0].iov_base;
 
     if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
       write_log("process_vm_readv failed at get_shell_environ");
@@ -203,28 +210,47 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
   free(environ_pointer);
 
   {
-    struct iovec local[ENVIRON_AMOUNT_OF_VARIABLES];
-    struct iovec remote[ENVIRON_AMOUNT_OF_VARIABLES];
+    __environ = calloc(LOCAL_ENVIRON_AMOUNT_OF_VARIABLES, sizeof(char *));
+
+    struct iovec local[1];
+    struct iovec remote[1];
+    int j = 0;
     for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
-      local[i].iov_base = calloc(1, ENVIRON_ELEMENT_SIZE);
-      local[i].iov_len = ENVIRON_ELEMENT_SIZE;
+      local[0].iov_base = calloc(1, ENVIRON_ELEMENT_SIZE);
+      local[0].iov_len = ENVIRON_ELEMENT_SIZE;
 
-      remote[i].iov_base = __environ[i];
-      remote[i].iov_len = ENVIRON_ELEMENT_SIZE;
+      remote[0].iov_base = __environ_addresses[i];
+      remote[0].iov_len = ENVIRON_ELEMENT_SIZE;
 
-      __environ[i] = local[i].iov_base;
-    }
+      if (process_vm_readv(shell_pid, local, 1, remote, 1, 0) == -1) {
+        free(local[0].iov_base);
+        break;
+      }
 
-    if (process_vm_readv(shell_pid, local, ENVIRON_AMOUNT_OF_VARIABLES, remote, ENVIRON_AMOUNT_OF_VARIABLES, 0) == -1) {
-      write_log("process_vm_readv failed at get_shell_environ");
-      return;
+      if (!strlen(local[0].iov_base)) {
+        write_log("Shell environ is invalid");
+        free(local[0].iov_base);
+        return;
+      }
+
+      if (!strncmp(local[0].iov_base, "PWD", 3) || !strncmp(local[0].iov_base, "NHI_PS1", 7) || !strncmp(local[0].iov_base, "NHI_LAST_EXECUTED_COMMAND", 25)) {
+        __environ[j] = local[0].iov_base;
+        j++;
+        if (j == LOCAL_ENVIRON_AMOUNT_OF_VARIABLES) {
+          break;
+        }
+      } else {
+        free(local[0].iov_base);
+      }
     }
   }
+
+  free(__environ_addresses);
 }
 
 void reverse_environ(void)
 {
-  for (int i = 0; i<ENVIRON_AMOUNT_OF_VARIABLES; i++) {
+  for (int i = 0; i<LOCAL_ENVIRON_AMOUNT_OF_VARIABLES; i++) {
     free(__environ[i]);
   }
   free(__environ);
@@ -232,7 +258,7 @@ void reverse_environ(void)
   __environ = original_environ;
 }
 
-void handle_kill_SIGUSR2(struct kill_event *kill_event, size_t data_sz)
+void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
 {
   // find indicator and environ_address of the shell
   long indicator = 0;

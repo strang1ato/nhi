@@ -59,7 +59,7 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
 
   pid_t parent_shell_pid = 0;
   long parent_shell_indicator = 0;
-  if (sig == SIGUSR1) {
+  if (sig == SIGUSR1 || sig == SIGUSR2) {
     // remove element where shell_pid from children
     int i = 0;
     struct child zero = {0};

@@ -18,7 +18,7 @@ function prompter() {
   if [[ $command_ran > 1 && "$ran_first_time" == "true" ]]; then
     export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1 | sed -E 's/^\s+[0-9]+\s\s//g')
     /bin/does-not-exist-trick 2> /dev/null
-    kill -s SIGUSR2 120120000 2> /dev/null
+    kill -s SIGRTMIN 120120000 2> /dev/null
   fi
   ran_first_time="true"
   command_ran=0
