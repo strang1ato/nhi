@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -14,7 +15,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string, fetchChildShells, stderrInRed bool) error {
+func Fetch(db *sql.DB, indicator, startEndRange, directory, commandRegex, before, after string, fetchChildShells, stderrInRed bool) error {
 	billion := 1000000000
 	sliceStartEndRange, err := utils.GetSliceStartEndRange(startEndRange, billion)
 	if err != nil {
@@ -41,7 +42,7 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, before, after string
 		return err
 	}
 
-	if err := printRows(db, rows, fetchChildShells, stderrInRed); err != nil {
+	if err := printRows(db, rows, commandRegex, fetchChildShells, stderrInRed); err != nil {
 		return err
 	}
 	return nil
@@ -187,7 +188,7 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 	return where, nil
 }
 
-func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells, stderrInRed bool) error {
+func printRows(db *sql.DB, rows *sql.Rows, commandRegex string, fetchChildShells, stderrInRed bool) error {
 	for rows.Next() {
 		var PS1, command string
 		var output []byte
@@ -196,6 +197,15 @@ func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells, stderrInRed bool) e
 		if command == "" {
 			continue
 		}
+
+		match := true
+		if commandRegex != "" {
+			match, _ = regexp.MatchString(commandRegex, command)
+		}
+		if !match {
+			continue
+		}
+
 		fmt.Print(PS1)
 		fmt.Println(command)
 
@@ -230,7 +240,7 @@ func printRows(db *sql.DB, rows *sql.Rows, fetchChildShells, stderrInRed bool) e
 				}
 			} else if character == 253 {
 				if fetchChildShells {
-					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", true, stderrInRed); err != nil {
+					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", "", true, stderrInRed); err != nil {
 						return err
 					}
 				}
