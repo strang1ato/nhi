@@ -3,6 +3,7 @@ package logSession
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +14,7 @@ import (
 )
 
 // Log shows log of commands using less program (in similar manner as git log does)
-func LogSession(db *sql.DB, session, directory, before, after string, long bool) error {
+func LogSession(db *sql.DB, session, directory, commandRegex, before, after string, long bool) error {
 	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
@@ -41,7 +42,7 @@ func LogSession(db *sql.DB, session, directory, before, after string, long bool)
 		return err
 	}
 
-	contentStr, contentStrLen, err := getContentStrAndLen(rows, long)
+	contentStr, contentStrLen, err := getContentStrAndLen(rows, commandRegex, long)
 	if err != nil {
 		return err
 	}
@@ -170,7 +171,7 @@ func getWhere(directory, before, after string) (string, error) {
 	return where, nil
 }
 
-func getContentStrAndLen(rows *sql.Rows, long bool) (string, int, error) {
+func getContentStrAndLen(rows *sql.Rows, commandRegex string, long bool) (string, int, error) {
 	var content strings.Builder
 	for rows.Next() {
 		var indicator,
@@ -183,16 +184,23 @@ func getContentStrAndLen(rows *sql.Rows, long bool) (string, int, error) {
 			continue
 		}
 
-		startTimeLocal := time.Unix(startTime, 0)
-		finishTimeLocal := time.Unix(finishTime, 0)
-
-		content.WriteString("\x1b[33m" + "indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
-		content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
-		content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
-		if long {
-			content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
+		match := true
+		if commandRegex != "" {
+			match, _ = regexp.MatchString(commandRegex, command)
 		}
-		content.WriteString("\n    " + command + "\n\n")
+
+		if match {
+			startTimeLocal := time.Unix(startTime, 0)
+			finishTimeLocal := time.Unix(finishTime, 0)
+
+			content.WriteString("\x1b[33m" + "indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
+			content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
+			content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
+			if long {
+				content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
+			}
+			content.WriteString("\n    " + command + "\n\n")
+		}
 	}
 
 	contentStr := content.String()
