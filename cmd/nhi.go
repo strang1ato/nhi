@@ -16,22 +16,22 @@ import (
 var cli struct {
 	Log struct {
 		Session   string `arg optional name:"session"`
-		Directory string `short:"d" help:"Only show shell sessions where commands were executed in specified directory."`
+		Directory string `short:"d" help:"Only show shell session(s) where command(s) were executed in specified directory."`
 		Command   string `short:"c" help:"Only show shell session(s) where command(s) match given regex."`
-		Before    string `short:"b" help:"Only show shell sessions created (or commands executed if session specified) before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After     string `short:"a" help:"Only show shell sessions created (or commands executed if session specified) after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		Before    string `short:"b" help:"Only show shell session(s) created (or command(s) executed if session specified) before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After     string `short:"a" help:"Only show shell session(s) created (or command(s) executed if session specified) after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		Long      bool   `short:"l" help:"Use a long listing format."`
 	} `cmd help:"Show logs"`
 
 	Fetch struct {
 		Session          string `arg required name:"session"`
 		StartEndRange    string `arg optional name:"start:end"`
-		Directory        string `short:"d" help:"Only fetch commands that were executed in specified directory."`
-		Before           string `short:"b" help:"Only fetch commands that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After            string `short:"a" help:"Only fetch commands that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		Directory        string `short:"d" help:"Only fetch command(s) that were executed in specified directory."`
+		Before           string `short:"b" help:"Only fetch command(s) that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After            string `short:"a" help:"Only fetch command(s) that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		FetchChildShells bool   `short:"f" help:"Fetch content of shells executed within the session."`
-		StderrInRed      bool   `short:"r" help:"Show errors in red color."`
-	} `cmd help:"Fetch shell session, optionally with given range of commands."`
+		StderrInRed      bool   `short:"r" help:"Show error(s) in red color."`
+	} `cmd help:"Fetch shell session, optionally with given range of command(s)."`
 
 	Rename struct {
 		Session string `arg required name:"session"`
