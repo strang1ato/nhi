@@ -7,7 +7,7 @@
 #include <sys/time.h>
 #include <time.h>
 
-sqlite3 *open_db(void);
+sqlite3 *open_and_setup_db(void);
 
 void create_table(sqlite3 *, long);
 
@@ -24,16 +24,23 @@ void add_indicator(sqlite3 *, long);
 void meta_create_row(sqlite3 *, long);
 void meta_add_finish_time(sqlite3 *, long);
 
-sqlite3 *open_db(void)
+sqlite3 *open_and_setup_db(void)
 {
   sqlite3 *db;
+
 #ifndef TEST
   char *db_path = "/var/nhi/db";
 #else
   char db_path[256];
   sprintf(db_path, "%s/testing/db", getenv("PWD"));
 #endif
+
   if (sqlite3_open(db_path, &db) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+    return 0;
+  }
+
+  if (sqlite3_wal_autocheckpoint(db, 0) != SQLITE_OK) {  // disable automatic checkpointing
     write_log(sqlite3_errmsg(db));
     return 0;
   }

@@ -33,7 +33,7 @@ create-db:
 	chmod 777 /var/nhi
 	touch /var/nhi/db
 	chmod 777 /var/nhi/db
-	sqlite3 /var/nhi/db "CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
+	sqlite3 /var/nhi/db "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
 
 rm-db:
 	rm /var/nhi/db

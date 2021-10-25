@@ -95,6 +95,10 @@ void handle_kill_SIGUSR(struct kill_event *kill_event)
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
 
+  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+  }
+
   reverse_environ();
 
   bpf_map_update_elem(shells_fd, &i, &helper, BPF_ANY);
@@ -287,6 +291,10 @@ void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
 
+  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+  }
+
   reverse_environ();
 }
 
@@ -313,6 +321,10 @@ void handle_child_creation(pid_t *shell_pid)
 void handle_shell_exit(struct exit_shell_indicator_event *exit_shell_indicator_event)
 {
   meta_add_finish_time(db, exit_shell_indicator_event->indicator);
+
+  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+  }
 }
 
 void handle_write(struct write_event *write_event, size_t data_sz)
@@ -337,7 +349,7 @@ int main()
 
   original_environ = __environ;
 
-  db = open_db();
+  db = open_and_setup_db();
   if (!db) {
     return 0;
   }

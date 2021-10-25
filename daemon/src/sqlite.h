@@ -1,7 +1,7 @@
 #include <sqlite3.h>
 #include <stddef.h>
 
-sqlite3 *open_db(void);
+sqlite3 *open_and_setup_db(void);
 
 void create_table(sqlite3 *, long);
 
