@@ -338,63 +338,64 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     specificity = -1;
   }
 
-  if (count <= KSYS_WRITE_EVENT_SIZE-sizeof(long)-1) {
-    int zero = 0;
-    struct write_event *write_event;
-    write_event = bpf_map_lookup_elem(&ksys_write_event, &zero);
-    if (!write_event) {
-      return 0;
-    }
-
-    write_event->indicator = indicator;
-    write_event->output[0] = specificity;
-    if (buf) {
-      bpf_probe_read_user(write_event->output+1, count, buf);
-    }
-
-    // look for and handle alternate screen escape sequences if any
-    for (int i=1; i<512; i++) {
-      if (i == count) {
-        break;
-      }
-
-      if (write_event->output[i] == 27 && write_event->output[i+1] == '[' && write_event->output[i+2] == '?' && write_event->output[i+3] == '1' && write_event->output[i+4] == '0' && write_event->output[i+5] == '4' && write_event->output[i+6] == '9') {
-        struct shell *helper;
-        helper = bpf_map_lookup_elem(&shells, &shell_index);
-        if (!helper) {
-          return 0;
-        }
-        if (write_event->output[i+7] == 'h') {
-          helper->omit_write = 1;
-          bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
-          return 0;
-        } else if (write_event->output[i+7] == 'l') {
-          helper->omit_write = 0;
-          bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
-          write_event->output[i] = 0;
-          write_event->output[i+1] = 0;
-          write_event->output[i+2] = 0;
-          write_event->output[i+3] = 0;
-          write_event->output[i+4] = 0;
-          write_event->output[i+5] = 0;
-          write_event->output[i+6] = 0;
-          write_event->output[i+7] = 0;
-        }
-      }
-    }
-
-    struct shell *shell;
-    shell = bpf_map_lookup_elem(&shells, &shell_index);
-    if (shell && shell->omit_write == 1) {
-      return 0;
-    }
-
-    if (count == 7) {
-      count++;
-    }
-
-    bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long)+1, 0);
+  if (count > KSYS_WRITE_EVENT_SIZE-sizeof(long)-1) {
+    count = KSYS_WRITE_EVENT_SIZE-sizeof(long)-2;
   }
+
+  struct write_event *write_event;
+  write_event = bpf_map_lookup_elem(&ksys_write_event, &zero);
+  if (!write_event) {
+    return 0;
+  }
+
+  write_event->indicator = indicator;
+  write_event->output[0] = specificity;
+  if (buf) {
+    bpf_probe_read_user(write_event->output+1, count, buf);
+  }
+
+  // look for and handle alternate screen escape sequences if any
+  for (int i=1; i<512; i++) {
+    if (i == count) {
+      break;
+    }
+
+    if (write_event->output[i] == 27 && write_event->output[i+1] == '[' && write_event->output[i+2] == '?' && write_event->output[i+3] == '1' && write_event->output[i+4] == '0' && write_event->output[i+5] == '4' && write_event->output[i+6] == '9') {
+      struct shell *helper;
+      helper = bpf_map_lookup_elem(&shells, &shell_index);
+      if (!helper) {
+        return 0;
+      }
+      if (write_event->output[i+7] == 'h') {
+        helper->omit_write = 1;
+        bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
+        return 0;
+      } else if (write_event->output[i+7] == 'l') {
+        helper->omit_write = 0;
+        bpf_map_update_elem(&shells, &shell_index, helper, BPF_ANY);
+        write_event->output[i] = 0;
+        write_event->output[i+1] = 0;
+        write_event->output[i+2] = 0;
+        write_event->output[i+3] = 0;
+        write_event->output[i+4] = 0;
+        write_event->output[i+5] = 0;
+        write_event->output[i+6] = 0;
+        write_event->output[i+7] = 0;
+      }
+    }
+  }
+
+  struct shell *shell;
+  shell = bpf_map_lookup_elem(&shells, &shell_index);
+  if (shell && shell->omit_write == 1) {
+    return 0;
+  }
+
+  if (count == 7) {
+    count++;
+  }
+
+  bpf_ringbuf_output(&ring_buffer, write_event, count+sizeof(long)+1, 0);
   return 0;
 }
 
