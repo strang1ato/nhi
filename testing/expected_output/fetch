@@ -1,11 +1,15 @@
-karol@karol:~$ echo hello 1
+[01;32mkarol@karol[00m:[01;34m~[00m$ echo hello 1
 hello 1
-karol@karol:~$ date
-Tue 12 Oct 2021 04:05:40 PM CEST
-karol@karol:~$ bash
-karol@karol:~$ pwd
+[01;32mkarol@karol[00m:[01;34m~[00m$ date
+Tue 26 Oct 2021 08:47:33 PM CEST
+[01;32mkarol@karol[00m:[01;34m~[00m$ bash
+[01;32mkarol@karol[00m:[01;34m~[00m$ echo hello2
+hello2
+
+[01;32mkarol@karol[00m:[01;34m~[00m$ cd ..
+[01;32mkarol@karol[00m:[01;34m/home[00m$ pwd
+/home
+[01;32mkarol@karol[00m:[01;34m~[00m$ pwd
 /home/karol
-karol@karol:~$ echo hello shell2
-hello shell2
-karol@karol:~$ echo $$
-45300
+[01;32mkarol@karol[00m:[01;34m~[00m$ echo $$
+50846

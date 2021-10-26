@@ -1,12 +1,21 @@
-[33mindicator 16340475566[0m
-Start time:  2021-10-12 16:05:56 +0200 CEST
-Finish time: 2021-10-12 16:05:56 +0200 CEST
-
-    echo hello shell2
-
-[33mindicator 16340475503[0m
-Start time:  2021-10-12 16:05:50 +0200 CEST
-Finish time: 2021-10-12 16:05:50 +0200 CEST
+[33mindicator 16352740638[0m
+Start time:  2021-10-26 20:47:43 +0200 CEST
+Finish time: 2021-10-26 20:47:43 +0200 CEST
+Exit status: 0
 
     pwd
+
+[33mindicator 16352740618[0m
+Start time:  2021-10-26 20:47:41 +0200 CEST
+Finish time: 2021-10-26 20:47:41 +0200 CEST
+Exit status: 0
+
+    cd ..
+
+[33mindicator 16352740590[0m
+Start time:  2021-10-26 20:47:39 +0200 CEST
+Finish time: 2021-10-26 20:47:39 +0200 CEST
+Exit status: 0
+
+    echo hello2
 
