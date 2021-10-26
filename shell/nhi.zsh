@@ -22,13 +22,6 @@ function precmd() {
 function echo() {
   /bin/echo "$@"
 }
-# function printf() {
-#   if [[ "$1" == "-v" ]]; then
-#     command printf $@
-#   else
-#     /bin/echo "$(command printf $@ 2>&1)"
-#   fi
-# }
 function pwd() {
   echo "$(command pwd $@ 2>&1)"
 }
