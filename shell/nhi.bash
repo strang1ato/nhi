@@ -14,6 +14,7 @@ export NHI_PS1="${PS1@P}"
 kill -s SIGUSR1 120120000 2> /dev/null
 
 function prompter() {
+  export NHI_EXIT_STATUS="$?"
   export NHI_PS1="${PS1@P}"
   if [[ $command_ran > 1 && "$ran_first_time" == "true" ]]; then
     export NHI_LAST_EXECUTED_COMMAND=$(HISTTIMEFORMAT="" && history 1 | sed -E 's/^\s+[0-9]+\s\s//g')

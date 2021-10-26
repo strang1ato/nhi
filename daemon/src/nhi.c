@@ -237,7 +237,7 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
         return;
       }
 
-      if (!strncmp(local[0].iov_base, "PWD", 3) || !strncmp(local[0].iov_base, "NHI_PS1", 7) || !strncmp(local[0].iov_base, "NHI_LAST_EXECUTED_COMMAND", 25)) {
+      if (!strncmp(local[0].iov_base, "PWD", 3) || !strncmp(local[0].iov_base, "NHI_PS1", 7) || !strncmp(local[0].iov_base, "NHI_EXIT_STATUS", 15) || !strncmp(local[0].iov_base, "NHI_LAST_EXECUTED_COMMAND", 25)) {
         __environ[j] = local[0].iov_base;
         j++;
         if (j == LOCAL_ENVIRON_AMOUNT_OF_VARIABLES) {
@@ -283,6 +283,7 @@ void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
   get_shell_environ(kill_event->shell_pid, environ_address);
 
   add_command(db, indicator, getenv("NHI_LAST_EXECUTED_COMMAND"));
+  add_exit_status(db, indicator, getenv("NHI_EXIT_STATUS"));
   add_finish_time(db, indicator);
   add_indicator(db, indicator);
 

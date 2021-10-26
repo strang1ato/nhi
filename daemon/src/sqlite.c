@@ -16,6 +16,7 @@ void create_row(sqlite3 *, long);
 void add_PS1(sqlite3 *, long, void *);
 void add_command(sqlite3 *, long, void *);
 void add_output(sqlite3 *, long, void *, size_t);
+void add_exit_status(sqlite3 *, long, void *);
 void add_pwd(sqlite3 *, long, void *);
 void add_start_time(sqlite3 *, long);
 void add_finish_time(sqlite3 *, long);
@@ -52,7 +53,7 @@ void create_table(sqlite3 *db, long indicator)
   sqlite3_stmt *stmt;
   char query[150];
   sprintf(query, "%s%ld%s",
-          "CREATE TABLE `", indicator, "` (PS1 TEXT, command TEXT, output BLOB, pwd TEXT, start_time INTEGER, finish_time INTEGER, indicator INTEGER);");
+          "CREATE TABLE `", indicator, "` (PS1 TEXT, command TEXT, output BLOB, exit_status TEXT, pwd TEXT, start_time INTEGER, finish_time INTEGER, indicator INTEGER);");
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
@@ -68,7 +69,7 @@ void create_row(sqlite3 *db, long indicator)
 {
   char query[100];
   sprintf(query, "%s%ld%s",
-          "INSERT INTO `", indicator, "` VALUES (NULL, NULL, '', NULL, NULL, NULL, NULL);");
+          "INSERT INTO `", indicator, "` VALUES (NULL, NULL, '', NULL, NULL, NULL, NULL, NULL);");
   sqlite3_stmt *stmt;
   if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
@@ -134,6 +135,27 @@ void add_output(sqlite3 *db, long indicator, void *output, size_t output_len)
   }
 
   if (sqlite3_bind_blob(stmt, 1, output, output_len, NULL) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+  }
+
+  if (sqlite3_step(stmt) != SQLITE_DONE) {
+    write_log(sqlite3_errmsg(db));
+  }
+
+  sqlite3_finalize(stmt);
+}
+
+void add_exit_status(sqlite3 *db, long indicator, void *exit_status)
+{
+  char query[100];
+  sprintf(query, "%s%ld%s%ld%s",
+          "UPDATE `", indicator, "` SET exit_status=? WHERE rowid = (SELECT MAX(rowid) FROM `", indicator, "`);");
+  sqlite3_stmt *stmt;
+  if (sqlite3_prepare_v2(db, query, -1, &stmt, NULL) != SQLITE_OK) {
+    write_log(sqlite3_errmsg(db));
+  }
+
+  if (sqlite3_bind_text(stmt, 1, exit_status, strlen(exit_status), NULL) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 

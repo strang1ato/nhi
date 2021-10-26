@@ -9,6 +9,7 @@ export NHI_PS1="${(%%)PS1}"
 kill -s SIGUSR2 120120000 2> /dev/null
 
 function precmd() {
+  export NHI_EXIT_STATUS="$?"
   export NHI_PS1="${(%%)PS1}"
   if [[ $command_ran > 1 && "$ran_first_time" == "true" ]]; then
     export NHI_LAST_EXECUTED_COMMAND=$(history -1 | sed -E 's/^\s+[0-9]+\s\s//g')
