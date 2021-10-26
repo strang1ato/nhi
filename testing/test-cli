@@ -12,7 +12,7 @@ if [[ "$diff_result" != "" ]]; then
   exit 1
 fi
 
-diff_result="$(diff ./testing/expected_output/log_session <(./nhi log {-1}))"
+diff_result="$(diff ./testing/expected_output/log_session <(./nhi log-session {-1}))"
 if [[ "$diff_result" != "" ]]; then
   echo The output of log session is not expected! 1>&2
   exit 1
