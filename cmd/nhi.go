@@ -15,13 +15,21 @@ import (
 // Declare cli variable used by kong
 var cli struct {
 	Log struct {
-		Session   string `arg optional name:"session"`
 		Directory string `short:"d" help:"Only show shell session(s) where command(s) were executed in specified directory."`
 		Command   string `short:"c" help:"Only show shell session(s) where command(s) match given regex."`
-		Before    string `short:"b" help:"Only show shell session(s) created (or command(s) executed if session specified) before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After     string `short:"a" help:"Only show shell session(s) created (or command(s) executed if session specified) after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		Before    string `short:"b" help:"Only show shell session(s) created before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After     string `short:"a" help:"Only show shell session(s) created after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		Long      bool   `short:"l" help:"Use a long listing format."`
-	} `cmd help:"Show logs"`
+	} `cmd help:"Show logs of shell sessions."`
+
+	LogSession struct {
+		Session   string `arg required name:"session"`
+		Directory string `short:"d" help:"Only show command(s) executed in specified directory."`
+		Command   string `short:"c" help:"Only show command(s) that match given regex."`
+		Before    string `short:"b" help:"Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After     string `short:"a" help:"Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		Long      bool   `short:"l" help:"Use a long listing format."`
+	} `cmd help:"Show logs of executed commands within <session>."`
 
 	Fetch struct {
 		Session          string `arg required name:"session"`
@@ -55,8 +63,8 @@ func Run() error {
 	switch ctx.Command() {
 	case "log":
 		err = log.Log(db, cli.Log.Directory, cli.Log.Command, cli.Log.Before, cli.Log.After, cli.Log.Long)
-	case "log <session>":
-		err = logSession.LogSession(db, cli.Log.Session, cli.Log.Directory, cli.Log.Command, cli.Log.Before, cli.Log.After, cli.Log.Long)
+	case "log-session <session>":
+		err = logSession.LogSession(db, cli.LogSession.Session, cli.LogSession.Directory, cli.LogSession.Command, cli.LogSession.Before, cli.LogSession.After, cli.LogSession.Long)
 	case "fetch <session>":
 		var indicator string
 		indicator, err = utils.GetSessionIndicator(db, cli.Fetch.Session)
