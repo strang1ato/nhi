@@ -197,7 +197,7 @@ func getContentStrAndLen(rows *sql.Rows, commandRegex string, long bool) (string
 			content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
 			content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
 			if long {
-				content.WriteString("\x1b[32m" + "Directory: " + pwd + "\x1b[0m" + "\n")
+				content.WriteString("Directory: " + pwd + "\n")
 			}
 			content.WriteString("\n    " + command + "\n\n")
 		}
