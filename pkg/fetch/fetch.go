@@ -15,7 +15,7 @@ import (
 )
 
 // Fetch retrieves shell session optionally with given range of commands
-func Fetch(db *sql.DB, indicator, startEndRange, directory, commandRegex, before, after string, fetchChildShells, stderrInRed bool) error {
+func Fetch(db *sql.DB, indicator, startEndRange, exitStatus, directory, commandRegex, before, after string, fetchChildShells, stderrInRed bool) error {
 	billion := 1000000000
 	sliceStartEndRange, err := utils.GetSliceStartEndRange(startEndRange, billion)
 	if err != nil {
@@ -27,7 +27,7 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, commandRegex, before
 		return err
 	}
 
-	where, err := getWhere(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator, directory, before, after)
+	where, err := getWhere(sliceStartEndRange, startRangeInt, endRangeInt, billion, indicator, exitStatus, directory, before, after)
 	if err != nil {
 		return err
 	}
@@ -48,7 +48,7 @@ func Fetch(db *sql.DB, indicator, startEndRange, directory, commandRegex, before
 	return nil
 }
 
-func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, directory, before, after string) (string, error) {
+func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, indicator, exitStatus, directory, before, after string) (string, error) {
 	var where string
 	if startRangeInt < billion && endRangeInt < billion {
 		if startRangeInt < 0 && endRangeInt < 0 {
@@ -83,6 +83,10 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 	} else {
 		where = fmt.Sprintf("indicator >= %s AND indicator <= %s",
 			sliceStartEndRange[0], sliceStartEndRange[1])
+	}
+
+	if exitStatus != "" {
+		where = fmt.Sprintf("exit_status = '%s'", exitStatus)
 	}
 
 	if directory != "" {
@@ -240,7 +244,7 @@ func printRows(db *sql.DB, rows *sql.Rows, commandRegex string, fetchChildShells
 				}
 			} else if character == 253 {
 				if fetchChildShells {
-					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", "", true, stderrInRed); err != nil {
+					if err := Fetch(db, string(output[i+1:i+12]), ":", "", "", "", "", "", true, stderrInRed); err != nil {
 						return err
 					}
 				}
