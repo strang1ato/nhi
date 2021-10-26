@@ -14,13 +14,13 @@ import (
 )
 
 // Log shows log of commands using less program (in similar manner as git log does)
-func LogSession(db *sql.DB, session, directory, commandRegex, before, after string, long bool) error {
+func LogSession(db *sql.DB, session, exitStatus, directory, commandRegex, before, after string, long bool) error {
 	indicator, err := utils.GetSessionIndicator(db, session)
 	if err != nil {
 		return err
 	}
 
-	where, err := getWhere(directory, before, after)
+	where, err := getWhere(exitStatus, directory, before, after)
 	if err != nil {
 		return err
 	}
@@ -58,13 +58,21 @@ func LogSession(db *sql.DB, session, directory, commandRegex, before, after stri
 	return nil
 }
 
-func getWhere(directory, before, after string) (string, error) {
+func getWhere(exitStatus, directory, before, after string) (string, error) {
 	var where string
+	if exitStatus != "" {
+		where = fmt.Sprintf("exit_status = '%s'", exitStatus)
+	}
+
 	if directory != "" {
 		if directory != "/" && directory != "//" {
 			directory = strings.TrimSuffix(directory, "/")
 		}
-		where = fmt.Sprintf("pwd = '%s'", directory)
+		if where == "" {
+			where = fmt.Sprintf("pwd = '%s'", directory)
+		} else {
+			where = fmt.Sprintf("%s AND pwd = '%s'", where, directory)
+		}
 	}
 
 	if before != "" {

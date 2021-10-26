@@ -14,7 +14,7 @@ import (
 )
 
 // Log shows log of session using less program (in similar manner as git log does)
-func Log(db *sql.DB, directory, commandRegex, before, after string, long bool) error {
+func Log(db *sql.DB, exitStatus, directory, commandRegex, before, after string, long bool) error {
 	where, err := getWhere(before, after)
 	if err != nil {
 		return err
@@ -33,7 +33,7 @@ func Log(db *sql.DB, directory, commandRegex, before, after string, long bool) e
 		return err
 	}
 
-	contentStr, contentStrLen, err := getContentStrAndLen(db, rows, directory, commandRegex, long)
+	contentStr, contentStrLen, err := getContentStrAndLen(db, rows, exitStatus, directory, commandRegex, long)
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func getWhere(before, after string) (string, error) {
 	return where, nil
 }
 
-func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex string, long bool) (string, int, error) {
+func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, commandRegex string, long bool) (string, int, error) {
 	var content strings.Builder
 	for rows.Next() {
 		var indicator int64
@@ -166,7 +166,7 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 		startTimeLocal := time.Unix(startTime, 0)
 		finishTimeLocal := time.Unix(finishTime, 0)
 
-		where := getContentWhere(directory)
+		where := getContentWhere(exitStatus, directory)
 
 		var query string
 		if where == "" {
@@ -253,13 +253,21 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 	return contentStr, contentStrLen, nil
 }
 
-func getContentWhere(directory string) string {
+func getContentWhere(exitStatus, directory string) string {
 	var where string
+	if exitStatus != "" {
+		where = fmt.Sprintf("exit_status = '%s'", exitStatus)
+	}
+
 	if directory != "" {
 		if directory != "/" && directory != "//" {
 			directory = strings.TrimSuffix(directory, "/")
 		}
-		where = fmt.Sprintf("pwd = '%s'", directory)
+		if where == "" {
+			where = fmt.Sprintf("pwd = '%s'", directory)
+		} else {
+			where = fmt.Sprintf("%s AND pwd = '%s'", where, directory)
+		}
 	}
 	return where
 }
