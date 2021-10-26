@@ -27,10 +27,10 @@ func LogSession(db *sql.DB, session, directory, commandRegex, before, after stri
 
 	var query string
 	if where == "" {
-		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` ORDER BY rowid DESC;",
+		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, exit_status, pwd, command FROM `%s` ORDER BY rowid DESC;",
 			indicator)
 	} else {
-		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
+		query = fmt.Sprintf("SELECT indicator, start_time, finish_time, exit_status, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
 			indicator, where)
 	}
 
@@ -176,9 +176,10 @@ func getContentStrAndLen(rows *sql.Rows, commandRegex string, long bool) (string
 	for rows.Next() {
 		var indicator,
 			startTime, finishTime int64
-		var pwd,
+		var exitStatus,
+			pwd,
 			command string
-		rows.Scan(&indicator, &startTime, &finishTime, &pwd, &command)
+		rows.Scan(&indicator, &startTime, &finishTime, &exitStatus, &pwd, &command)
 
 		if command == "" {
 			continue
@@ -196,6 +197,7 @@ func getContentStrAndLen(rows *sql.Rows, commandRegex string, long bool) (string
 			content.WriteString("\x1b[33m" + "indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
 			content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
 			content.WriteString("Finish time: " + finishTimeLocal.String() + "\n")
+			content.WriteString("Exit status: " + exitStatus + "\n")
 			if long {
 				content.WriteString("Directory: " + pwd + "\n")
 			}

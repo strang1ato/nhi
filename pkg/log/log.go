@@ -170,10 +170,10 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 
 		var query string
 		if where == "" {
-			query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` ORDER BY rowid DESC;",
+			query = fmt.Sprintf("SELECT indicator, start_time, finish_time, exit_status, pwd, command FROM `%s` ORDER BY rowid DESC;",
 				strconv.FormatInt(indicator, 10))
 		} else {
-			query = fmt.Sprintf("SELECT indicator, start_time, finish_time, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
+			query = fmt.Sprintf("SELECT indicator, start_time, finish_time, exit_status, pwd, command FROM `%s` WHERE %s ORDER BY rowid DESC;",
 				strconv.FormatInt(indicator, 10), where)
 		}
 
@@ -187,9 +187,10 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 			for rows.Next() {
 				var indicator,
 					startTime, finishTime int64
-				var pwd,
+				var exitStatus,
+					pwd,
 					command string
-				rows.Scan(&indicator, &startTime, &finishTime, &pwd, &command)
+				rows.Scan(&indicator, &startTime, &finishTime, &exitStatus, &pwd, &command)
 
 				if command != "" {
 					match := true
@@ -211,6 +212,7 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 						content.WriteString("\x1b[33m" + "  indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
 						content.WriteString("  Start time:  " + startTimeLocal.String() + "\n")
 						content.WriteString("  Finish time: " + finishTimeLocal.String() + "\n")
+						content.WriteString("  Exit status: " + exitStatus + "\n")
 						content.WriteString("\n      " + command + "\n\n")
 					}
 				}
@@ -226,9 +228,10 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, directory, commandRegex str
 				for rows.Next() {
 					var indicator,
 						startTime, finishTime int64
-					var pwd,
+					var exitStatus,
+						pwd,
 						command string
-					rows.Scan(&indicator, &startTime, &finishTime, &pwd, &command)
+					rows.Scan(&indicator, &startTime, &finishTime, &exitStatus, &pwd, &command)
 
 					match, _ := regexp.MatchString(commandRegex, command)
 					if match {
