@@ -366,7 +366,7 @@ int main()
     return 0;
   }
 
-  char *program_names[5] = {"kill_something_info", "kernel_clone_ret", "do_exit", "ksys_write", "__fdget_pos"};
+  char *program_names[5] = {"kill_something_info", "fork_tracepoint", "do_exit", "ksys_write", "__fdget_pos"};
   for (int i=0; i<5; i++) {
     struct bpf_program *bpf_program;
 

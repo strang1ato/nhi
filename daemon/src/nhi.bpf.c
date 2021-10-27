@@ -118,11 +118,11 @@ int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pi
   return 0;
 }
 
-SEC("fexit/kernel_clone")
-int BPF_PROG(kernel_clone_ret, struct kernel_clone_args *args, pid_t new_child_pid)
+SEC("tracepoint/sched/sched_process_fork")
+int fork_tracepoint (struct trace_event_raw_sched_process_fork *ctx)
 {
   pid_t parent_pid = bpf_get_current_pid_tgid() >> 32;
-  // add new_child_pid to children if parent_pid in shells
+  // add new child pid to children if parent_pid in shells
   {
     struct shell *shell;
     int i = 0;
@@ -139,7 +139,7 @@ int BPF_PROG(kernel_clone_ret, struct kernel_clone_args *args, pid_t new_child_p
     }
   }
 
-  // add new_child_pid to children if parent_pid in children
+  // add new child pid to children if parent_pid in children
   {
     struct child *child;
     int i = 0;
@@ -164,7 +164,7 @@ add_new_child_pid: {
       if (child) {
         if (!child->child_pid) {
           struct child helper;
-          helper.child_pid = new_child_pid;
+          helper.child_pid = ctx->child_pid;
           helper.shell_pid = parent_pid;
           bpf_map_update_elem(&children, &i, &helper, BPF_ANY);
 
