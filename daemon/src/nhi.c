@@ -355,7 +355,7 @@ int main()
     return 0;
   }
 
-  bpf_object = bpf_object__open_file("nhi.bpf.o", 0);
+  bpf_object = bpf_object__open_file("/etc/nhi/nhi.bpf.o", 0);
   if (libbpf_get_error(bpf_object)) {
     write_log("Failed to open bpf_object");
     return 0;

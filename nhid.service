@@ -1,0 +1,11 @@
+[Unit]
+Description=nhi daemon
+
+[Service]
+User=root
+LimitMEMLOCK=10M
+Type=simple
+ExecStart=nhid
+
+[Install]
+WantedBy=multi-user.target
