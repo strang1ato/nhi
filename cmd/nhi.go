@@ -15,32 +15,32 @@ import (
 // Declare cli variable used by kong
 var cli struct {
 	Log struct {
-		ExitStatus string `short:"s" help:"Only show session(s) where command(s) have specified exit status."`
-		Directory  string `short:"d" help:"Only show shell session(s) where command(s) were executed in specified directory."`
-		Command    string `short:"c" help:"Only show shell session(s) where command(s) match given regex."`
-		Before     string `short:"b" help:"Only show shell session(s) created before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After      string `short:"a" help:"Only show shell session(s) created after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		Long       bool   `short:"l" help:"Use a long listing format."`
+		ExitStatus string `short:"s" placeholder:"<exit-status>" help:"Only show session(s) where command(s) have specified exit status."`
+		Directory  string `short:"d" placeholder:"<directory>" help:"Only show shell session(s) where command(s) were executed in specified directory."`
+		Command    string `short:"c" placeholder:"<command-regex>" help:"Only show shell session(s) where command(s) match given regex."`
+		Before     string `short:"b" placeholder:"<date-and-time>" help:"Only show shell session(s) created before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After      string `short:"a" placeholder:"<date-and-time>" help:"Only show shell session(s) created after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		Long       bool   `short:"l" help:"Show commands executed inside session(s) as well."`
 	} `cmd help:"Show logs of shell sessions."`
 
 	LogSession struct {
 		Session    string `arg required name:"session"`
-		ExitStatus string `short:"s" help:"Only show command(s) with specified exit status."`
-		Directory  string `short:"d" help:"Only show command(s) executed in specified directory."`
-		Command    string `short:"c" help:"Only show command(s) that match given regex."`
-		Before     string `short:"b" help:"Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After      string `short:"a" help:"Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		ExitStatus string `short:"s" placeholder:"<exit-status>" help:"Only show command(s) with specified exit status."`
+		Directory  string `short:"d" placeholder:"<directory>" help:"Only show command(s) executed in specified directory."`
+		Command    string `short:"c" placeholder:"<command-regex>" help:"Only show command(s) that match given regex."`
+		Before     string `short:"b" placeholder:"<date-and-time>" help:"Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After      string `short:"a" placeholder:"<date-and-time>" help:"Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		Long       bool   `short:"l" help:"Use a long listing format."`
-	} `cmd help:"Show logs of executed commands within <session>."`
+	} `cmd help:"Show logs of executed commands within session."`
 
 	Fetch struct {
 		Session          string `arg required name:"session"`
 		StartEndRange    string `arg optional name:"start:end"`
-		ExitStatus       string `short:"s" help:"Only fetch command(s) with specified exit status."`
-		Directory        string `short:"d" help:"Only fetch command(s) that were executed in specified directory."`
-		Command          string `short:"c" help:"Only fetch command(s) that match given regex."`
-		Before           string `short:"b" help:"Only fetch command(s) that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
-		After            string `short:"a" help:"Only fetch command(s) that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		ExitStatus       string `short:"s" placeholder:"<exit-status>" help:"Only fetch command(s) with specified exit status."`
+		Directory        string `short:"d" placeholder:"<directory>" help:"Only fetch command(s) that were executed in specified directory."`
+		Command          string `short:"c" placeholder:"<command-regex>" help:"Only fetch command(s) that match given regex."`
+		Before           string `short:"b" placeholder:"<date-and-time>" help:"Only fetch command(s) that were executed before specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
+		After            string `short:"a" placeholder:"<date-and-time>" help:"Only fetch command(s) that were executed after specified date and time. Date and time needs to be specified in the following format: \"%YY-%MM-%DD %HH:%MM:%SS\"."`
 		FetchChildShells bool   `short:"f" help:"Fetch content of shells executed within the session."`
 		StderrInRed      bool   `short:"r" help:"Show error(s) in red color."`
 	} `cmd help:"Fetch shell session, optionally with given range of command(s)."`
