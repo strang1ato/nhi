@@ -1,0 +1,37 @@
+.TH NHI 1 2021
+
+.SH NAME
+nhi - a tool which allows retrievement of commands executed in past and whole shell sessions, as well as every other useful information.
+
+.SH SYNOPSIS
+nhi [--help | -h] <command> [<args>]
+
+.SH DESCRIPTION
+nhi is a tool which automatically captures every potentially useful information
+about each executed command and everything around, and delivers powerful querying mechanism.
+
+.SH OPTIONS
+.TP
+-h, --help
+Show context-sensitive help.
+
+.SH NHI COMMANDS
+.TP
+nhi-log(1)
+Show logs of shell sessions.
+
+.TP
+nhi-log-session(1)
+Show logs of executed commands within <session>.
+
+.TP
+nhi-fetch(1)
+Fetch shell session, optionally with given range of command(s).
+
+.TP
+nhi-rename(1)
+Rename shell session.
+
+.TP
+nhi-remove(1)
+Remove range of shell sessions.

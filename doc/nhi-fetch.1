@@ -1,0 +1,46 @@
+.TH NHI-FETCH 1 2021
+
+.SH NAME
+nhi-fetch - Fetch shell session, optionally with given range of command(s).
+
+.SH SYNOPSIS
+nhi fetch [--help | -h] <session> [<start:end>] [--exit-status | -s <exit-status>] [--directory | -d <directory>] [--command | -c <command-regex>]
+[--before | -b <date-and-time>] [--after | -a <date-and-time>] [--fetch-child-shells | -f] [--stderr-in-red | -r]
+
+.SH OPTIONS
+.TP
+-h, --help
+Show context-sensitive help.
+
+<session>
+
+[<start:end>]
+
+
+.TP
+-s, --exit-status=<exit-status>
+Only show command(s) with specified exit status.
+
+.TP
+-d, --directory=<directory>
+Only show command(s) executed in specified directory.
+
+.TP
+-c, --command=<command-regex>
+Only show command(s) that match given regex.
+
+.TP
+-b, --before=<date-and-time>
+Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".
+
+.TP
+-a, --after=<date-and-time>
+Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".
+
+.TP
+-f, --fetch-child-shells
+Fetch content of shells executed within the session.
+
+.TP
+-r, --stderr-in-red
+Show error(s) in red color.

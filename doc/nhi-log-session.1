@@ -1,0 +1,43 @@
+.TH NHI-LOG-SESSION 1 2021
+
+.SH NAME
+nhi-log-session - Show logs of executed commands within <session>.
+
+.SH DESCRIPTION
+nhi-log-session shows logs of executed commands within session using less program. Interface is inspired by git-log.
+
+.SH SYNOPSIS
+nhi log [--help | -h] <session> [--exit-status | -s <exit-status>] [--directory | -d <directory>] [--command | -c <command-regex>]
+[--before | -b <date-and-time>] [--after | -a <date-and-time>] [-l | --long]
+
+.SH OPTIONS
+.TP
+-h, --help
+Show context-sensitive help.
+
+<session>
+
+
+.TP
+-s, --exit-status=<exit-status>
+Only show command(s) with specified exit status.
+
+.TP
+-d, --directory=<directory>
+Only show command(s) executed in specified directory.
+
+.TP
+-c, --command=<command-regex>
+Only show command(s) that match given regex.
+
+.TP
+-b, --before=<date-and-time>
+Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".
+
+.TP
+-a, --after=<date-and-time>
+Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".
+
+.TP
+-l, --long
+Use a long listing format.
