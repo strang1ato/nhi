@@ -20,7 +20,7 @@ func Remove(db *sql.DB, startEndRange string) error {
 		return err
 	}
 
-	where := utils.GetWhereFromSliceEnd(sliceStartEndRange, startRangeInt, endRangeInt, billion, "meta")
+	where := utils.GetWhereFromRange(sliceStartEndRange, startRangeInt, endRangeInt, billion, "meta")
 
 	query := fmt.Sprintf("SELECT indicator FROM `meta` WHERE %s;", where)
 	rows, err := db.Query(query)

@@ -51,9 +51,9 @@ func GetSessionIndicator(db *sql.DB, session string) (string, error) {
 		query = "SELECT indicator FROM `meta` WHERE name = '" + session + "';"
 	} else {
 		if index < 0 {
-			query = "SELECT indicator FROM `meta` WHERE rowid = (SELECT max(rowid)+" + strconv.Itoa(index+1) + " FROM `meta`);"
+			query = "SELECT indicator FROM `meta` ORDER BY rowid DESC LIMIT 1 OFFSET " + strconv.Itoa(-1*index-1) + ";"
 		} else {
-			query = "SELECT indicator FROM `meta` WHERE rowid = " + strconv.Itoa(index) + ";"
+			query = "SELECT indicator FROM `meta` LIMIT 1 OFFSET " + strconv.Itoa(index) + ";"
 		}
 	}
 	rows, err := db.Query(query)
@@ -68,42 +68,41 @@ func GetSessionIndicator(db *sql.DB, session string) (string, error) {
 	return strconv.Itoa(indicator), nil
 }
 
-// GetWhereFromSliceEnd contains universal implemenation. (however for now it is only used by remove, fetch uses its own)
-func GetWhereFromSliceEnd(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, table string) string {
+// GetWhereFromRange contains universal implemenation. (however for now it is only used by remove, fetch uses its own)
+func GetWhereFromRange(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, table string) string {
+	rowidStartRange, rowidEndRange := GetRowidsFromRange(sliceStartEndRange, startRangeInt, endRangeInt, billion, table)
+
 	var where string
 	if startRangeInt < billion && endRangeInt < billion {
-		if startRangeInt < 0 && endRangeInt < 0 {
-			where = fmt.Sprintf("rowid > (SELECT max(rowid)+%s FROM `%s`) AND rowid <= (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], table, sliceStartEndRange[1], table)
-		} else if startRangeInt < 0 {
-			where = fmt.Sprintf("rowid > (SELECT max(rowid)+%s FROM `%s`) AND rowid <= %s",
-				sliceStartEndRange[0], table, sliceStartEndRange[1])
-		} else if endRangeInt < 0 {
-			where = fmt.Sprintf("rowid > %s AND rowid <= (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], sliceStartEndRange[1], table)
-		} else {
-			where = fmt.Sprintf("rowid > %s AND rowid <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
+		where = fmt.Sprintf("rowid >= %s AND rowid < %s", rowidStartRange, rowidEndRange)
 	} else if startRangeInt < billion {
-		if startRangeInt < 0 {
-			where = fmt.Sprintf("rowid > (SELECT max(rowid)+%s FROM `%s`) AND indicator <= %s",
-				sliceStartEndRange[0], table, sliceStartEndRange[1])
-		} else {
-			where = fmt.Sprintf("rowid > %s AND indicator <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
+		where = fmt.Sprintf("rowid >= %s AND indicator <= %s", rowidStartRange, sliceStartEndRange[1])
 	} else if endRangeInt < billion {
-		if endRangeInt < 0 {
-			where = fmt.Sprintf("indicator > %s AND rowid < (SELECT max(rowid)+%s FROM `%s`)",
-				sliceStartEndRange[0], sliceStartEndRange[1], table)
-		} else {
-			where = fmt.Sprintf("indicator >= %s AND rowid <= %s",
-				sliceStartEndRange[0], sliceStartEndRange[1])
-		}
+		where = fmt.Sprintf("indicator >= %s AND rowid < %s", sliceStartEndRange[0], rowidEndRange)
 	} else {
 		where = fmt.Sprintf("indicator >= %s AND indicator <= %s",
 			sliceStartEndRange[0], sliceStartEndRange[1])
 	}
 	return where
+}
+
+// GetRowidsFromRange gets rowids corresponding to offsets
+func GetRowidsFromRange(sliceStartEndRange []string, startRangeInt, endRangeInt, billion int, table string) (string, string) {
+	var rowidStartRange, rowidEndRange string
+	if startRangeInt < 0 {
+		rowidStartRange = "(SELECT rowid FROM `" + table + "` ORDER BY rowid DESC LIMIT 1 OFFSET " + strconv.Itoa(-1*startRangeInt-1) + ")"
+	} else if startRangeInt < billion {
+		rowidStartRange = "(SELECT rowid FROM `" + table + "` LIMIT 1 OFFSET " + sliceStartEndRange[0] + ")"
+	}
+
+	if endRangeInt < 0 {
+		rowidEndRange = "(SELECT rowid FROM `" + table + "` ORDER BY rowid DESC LIMIT 1 OFFSET " + strconv.Itoa(-1*endRangeInt-1) + ")"
+	} else if endRangeInt < billion {
+		if endRangeInt == billion-1 {
+			rowidEndRange = sliceStartEndRange[1]
+		} else {
+			rowidEndRange = "(SELECT rowid FROM `" + table + "` LIMIT 1 OFFSET " + sliceStartEndRange[1] + ")"
+		}
+	}
+	return rowidStartRange, rowidEndRange
 }
