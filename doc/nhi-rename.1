@@ -11,6 +11,19 @@ nhi rename [--help | -h] <session> <new-name>
 -h, --help
 Show context-sensitive help.
 
+.TP
 <session>
+You can specify session by its:
+.RS
+- index, sessions are arranged from oldest to the most recently started. Indexing starts from 0, not from 1.
+.br
+- negative index, the index value of -1 gives the most recently started session, -2 gives the second most recent session, etc.
+.br
+- name.
 
+Indicator needs to be specified inside curly brackets.
+.RE
+
+.TP
 <new-name>
+New name of shell session. Session name can't be a number.

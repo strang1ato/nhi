@@ -11,4 +11,17 @@ nhi remove [--help | -h] <start:end>
 -h, --help
 Show context-sensitive help.
 
+.TP
 <start:end>
+To specify sessions to remove use slice notation: {X:Y}. Slice notation needs to be specified in curly brackets.
+.RS
+X is start range, Y is end range, you can replace X and Y with:
+.br
+- index, sessions are arranged from oldest to the most recently started. Indexing starts from 0, not from 1.
+.br
+- negative index, the index value of -1 gives the most recently started session, -2 gives the second most recent session, etc.
+.br
+You can also keep X or Y empty, in order to not set a border.
+
+nhi slice notation is inspired by python slice notation.
+.RE
