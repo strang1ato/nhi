@@ -185,6 +185,13 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 		if long {
 			var contentHeadWritten bool
 			for rows.Next() {
+				if !contentHeadWritten && commandRegex == "" {
+					content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
+					content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
+					content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
+					contentHeadWritten = true
+				}
+
 				var indicator,
 					startTime, finishTime int64
 				var exitStatus,
