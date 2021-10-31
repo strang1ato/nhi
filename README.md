@@ -26,3 +26,4 @@ Usage of `eBPF` guarantee a great performance and low overhead of the tool, beca
 `nhi` **does not** affect behaviour of any program/process (and OS in general).
 
 ## Usage
+For the full documentation, read [the nhi(1) man page](https://htmlpreview.github.io/?https://github.com/strang1ato/nhi/blob/main/doc/nhi.1.html).
