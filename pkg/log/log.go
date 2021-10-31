@@ -163,8 +163,13 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 			continue
 		}
 
-		startTimeLocal := time.Unix(startTime, 0)
-		finishTimeLocal := time.Unix(finishTime, 0)
+		startTimeLocal := time.Unix(startTime, 0).String()
+		var finishTimeLocal string
+		if finishTime == 0 {
+			finishTimeLocal = "-"
+		} else {
+			finishTimeLocal = time.Unix(finishTime, 0).String()
+		}
 
 		where := getContentWhere(exitStatus, directory)
 
@@ -187,8 +192,8 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 			for rows.Next() {
 				if !contentHeadWritten && commandRegex == "" {
 					content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
-					content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
-					content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
+					content.WriteString("Start time:  " + startTimeLocal + "\n")
+					content.WriteString("Finish time: " + finishTimeLocal + "\n\n")
 					contentHeadWritten = true
 				}
 
@@ -208,17 +213,22 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 					if match {
 						if !contentHeadWritten {
 							content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
-							content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
-							content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
+							content.WriteString("Start time:  " + startTimeLocal + "\n")
+							content.WriteString("Finish time: " + finishTimeLocal + "\n\n")
 							contentHeadWritten = true
 						}
 
-						startTimeLocal := time.Unix(startTime, 0)
-						finishTimeLocal := time.Unix(finishTime, 0)
+						startTimeLocal := time.Unix(startTime, 0).String()
+						var finishTimeLocal string
+						if finishTime == 0 {
+							finishTimeLocal = "-"
+						} else {
+							finishTimeLocal = time.Unix(finishTime, 0).String()
+						}
 
 						content.WriteString("\x1b[33m" + "  indicator " + strconv.FormatInt(indicator, 10) + "\x1b[0m" + "\n")
-						content.WriteString("  Start time:  " + startTimeLocal.String() + "\n")
-						content.WriteString("  Finish time: " + finishTimeLocal.String() + "\n")
+						content.WriteString("  Start time:  " + startTimeLocal + "\n")
+						content.WriteString("  Finish time: " + finishTimeLocal + "\n")
 						content.WriteString("  Exit status: " + exitStatus + "\n")
 						content.WriteString("\n      " + command + "\n\n")
 					}
@@ -228,8 +238,8 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 			if commandRegex == "" {
 				if rows.Next() {
 					content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
-					content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
-					content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
+					content.WriteString("Start time:  " + startTimeLocal + "\n")
+					content.WriteString("Finish time: " + finishTimeLocal + "\n\n")
 				}
 			} else {
 				for rows.Next() {
@@ -243,8 +253,8 @@ func getContentStrAndLen(db *sql.DB, rows *sql.Rows, exitStatus, directory, comm
 					match, _ := regexp.MatchString(commandRegex, command)
 					if match {
 						content.WriteString("\x1b[33m" + "Session name: " + name + "\x1b[0m" + "\n")
-						content.WriteString("Start time:  " + startTimeLocal.String() + "\n")
-						content.WriteString("Finish time: " + finishTimeLocal.String() + "\n\n")
+						content.WriteString("Start time:  " + startTimeLocal + "\n")
+						content.WriteString("Finish time: " + finishTimeLocal + "\n\n")
 						break
 					}
 				}
