@@ -1,0 +1,26 @@
+#!/bin/bash
+
+cp nhi /usr/bin
+
+mkdir -p /var/nhi
+chmod 777 /var/nhi
+touch /var/nhi/db
+chmod 777 /var/nhi/db
+sqlite3 /var/nhi/db "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
+
+mkdir -p /etc/nhi
+cp nhi.bpf.o /etc/nhi
+
+if [[ -e ~/.bashrc ]]; then
+  cp nhi.bash /etc/nhi
+  echo source /etc/nhi/nhi.bash >> ~/.bashrc
+fi
+if [[ -e ~/.zshrc ]]; then
+  cp nhi.zsh /etc/nhi
+  echo source /etc/nhi/nhi.zsh >> ~/.zshrc
+fi
+
+cp nhid /usr/bin
+
+cp nhid.service /etc/systemd/system
+systemctl enable nhid
