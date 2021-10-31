@@ -20,7 +20,7 @@ about each executed command and everything around, and delivers powerful queryin
 These features allow retrievement of commands executed in past and whole shell sessions,
 as well as every other useful information in convenient way.
 
-`nhi` daemon is based on [eBPF](https://ebpf.io/) `linux kernel` technology.
+`nhi` daemon is based on [eBPF](https://ebpf.io/) - a technology built-in `linux kernel`.
 Usage of `eBPF` guarantee a great performance and low overhead of the tool, because tracing is being **safely** done inside `kernel`.
 
 `nhi` **does not** affect behaviour of any program/process (and OS in general).
