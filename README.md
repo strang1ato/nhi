@@ -7,18 +7,19 @@
 about each executed command and everything around, and delivers powerful querying mechanism.
 
 `nhi` keeps records of:
+- command
 - output of command
 - exit status of command
 - working directory at the end of command execution
 - start time of command
 - finish time of command
-- shell prompt at the time of execution
+- shell prompt at the time of command execution
 - (and much more in the future :smile:)
 
 `nhi` also keeps record of infomations about shell session in general.
 
 These features allow retrievement of commands executed in past and whole shell sessions,
-as well as every other useful information in convenient way.
+as well as every other useful information in a convenient way.
 
 `nhi` daemon is based on [eBPF](https://ebpf.io/) - a technology built-in `linux kernel`.
 Usage of `eBPF` guarantee a great performance and low overhead of the tool, because tracing is being **safely** done inside `kernel`.
