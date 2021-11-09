@@ -21,10 +21,51 @@ about each executed command and everything around, and delivers powerful queryin
 These features allow retrievement of commands executed in past and whole shell sessions,
 as well as every other useful information in a convenient way.
 
-`nhi` daemon is based on [eBPF](https://ebpf.io/) - a technology built-in `linux kernel`.
+`nhi` daemon is based on [eBPF](https://ebpf.io/) - a technology built into `linux kernel`.
 Usage of `eBPF` guarantee a great performance and low overhead of the tool, because tracing is being **safely** done inside `kernel`.
 
 `nhi` **does not** affect behaviour of any program/process (and OS in general).
 
 ## Usage
 For the full documentation, read [the nhi(1) man page](https://htmlpreview.github.io/?https://github.com/strang1ato/nhi/blob/main/doc/nhi.1.html).
+
+For quick reference, use `nhi` `--help` flags.
+
+## Requirements
+`x86_64` architecture, `systemd` and `linux kernel` 5.5+.
+Some major distributions that ship with the `linux kernel` 5.5+:
+- Debian 11
+- Ubuntu 20.10+
+- Fedora 32+
+
+`xterm` based terminals are highly recommended. (If you don't know whether your terminal emulator is `xterm` based or not, it most likely is` xterm` based. `xterm` is standard for terminal emulators.)
+
+## Installation
+**Step 1**: Install `objdump`, `sqlite3`, `libsqlite3-dev` and `libbpf-dev` (example for linux debian/ubuntu systems):
+
+    sudo apt-get install binutils sqlite3 libsqlite3-dev libbpf-dev
+
+**Step 2**: Download all seven files from the latest [release](https://github.com/strang1ato/nhi/releases), and put them in a new empty directory.
+
+**Step 3**: Go to the new directory and run:
+
+    sudo -E bash ./install
+
+**Extra step only for Ubuntu users**:
+Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data required by `nhi`. To install shells that are compiled "normally", like on every other distro run:
+
+    sudo add-apt-repository ppa:strang1ato/default-bash-and-zsh
+    sudo apt-get update && sudo apt-get upgrade
+
+From now `bash` and `zsh` will be upgraded/installed only from the newly added repository.
+
+**Step 4**: Restart your computer.
+
+In order to check if you installed `nhi` succesfully open new terminal window and execute for example:
+
+    echo nhi test
+
+If your terminal output "duplicated" it means that `nhi` is properly installed.
+
+## Contributions
+Contributions are welcome! Any tips and suggestions are appreciated. If you found any bug feel free to submit new [issue](https://github.com/strang1ato/nhi/issues).
