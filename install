@@ -1,5 +1,6 @@
 #!/bin/bash
 
+chmod 755 nhi
 cp nhi /usr/bin
 
 mkdir -p /var/nhi
@@ -20,6 +21,7 @@ if [[ -e ~/.zshrc ]]; then
   echo source /etc/nhi/nhi.zsh >> ~/.zshrc
 fi
 
+chmod 755 nhid
 cp nhid /usr/bin
 
 cp nhid.service /etc/systemd/system
