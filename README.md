@@ -72,4 +72,4 @@ and
 If your terminal output "duplicated" it means that `nhi` is properly installed.
 
 ## Contributions
-Contributions are welcome! Any tips and suggestions are appreciated. If you found any bug feel free to submit new [issue](https://github.com/strang1ato/nhi/issues).
+Contributions are welcome! Any tips and suggestions are appreciated. If you found any bug feel free to submit a new [issue](https://github.com/strang1ato/nhi/issues).
