@@ -4,6 +4,7 @@ Description=nhi daemon
 [Service]
 User=root
 LimitMEMLOCK=10M
+Restart=always
 Type=simple
 ExecStart=nhid
 
