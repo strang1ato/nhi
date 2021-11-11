@@ -69,7 +69,7 @@ and
 
     nhi fetch {-1}
 
-If your terminal output "duplicated" it means that `nhi` is properly installed.
+If you see "nhi test" once again, it means that `nhi` is properly installed.
 
 ## Contributions
 Contributions are welcome! Any tips and suggestions are appreciated. If you found any bug feel free to submit a new [issue](https://github.com/strang1ato/nhi/issues).
