@@ -45,7 +45,7 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 ## Installation
 **Step 1**: Install `objdump`, `awk`, `sqlite3`, `libsqlite3-dev` and `libbpf-dev` (example for linux debian/ubuntu systems):
 
-    sudo apt-get install binutils, gawk, sqlite3 libsqlite3-dev libbpf-dev
+    sudo apt-get install binutils gawk sqlite3 libsqlite3-dev libbpf-dev
 
 **Step 2**: Download all seven files from the latest [release](https://github.com/strang1ato/nhi/releases), and put them in a new empty directory.
 
