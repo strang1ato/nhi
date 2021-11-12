@@ -58,7 +58,11 @@ Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data 
 
     sudo apt-get remove zsh-common
     sudo add-apt-repository ppa:strang1ato/default-bash-and-zsh
-    sudo apt-get update && sudo apt-get upgrade
+    sudo apt-get update && sudo apt-get install --reinstall bash
+    
+and if you were using `zsh`:
+    
+    sudo apt-get install zsh
 
 From now `bash` and `zsh` will be upgraded/installed only from the newly added repository.
 
