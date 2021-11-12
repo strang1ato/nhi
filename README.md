@@ -34,7 +34,7 @@ For the full documentation, read [the nhi(1) man page](https://htmlpreview.githu
 For quick reference, use `nhi` `--help` flags.
 
 ## Requirements
-`x86_64` architecture, `systemd` and `linux kernel` 5.5+.
+`bash` or `zsh`, `x86_64` architecture, `systemd` and `linux kernel` 5.5+.
 Some major distributions that ship with the `linux kernel` 5.5+:
 - Debian 11
 - Ubuntu 20.10+
