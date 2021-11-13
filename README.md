@@ -3,7 +3,7 @@
 ![workflow](https://github.com/strang1ato/nhi/actions/workflows/ci.yml/badge.svg)
 [![Gitter chat](https://badges.gitter.im/gitterHQ/gitter.png)](https://gitter.im/nhi-project/community)
 
-`nhi` is a revolutionary tool which automatically captures every potentially useful information
+`nhi` is a revolutionary tool which automatically captures all potentially useful information
 about each executed command and everything around, and delivers powerful querying mechanism.
 
 `nhi` keeps records of:
