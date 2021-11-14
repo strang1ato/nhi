@@ -196,12 +196,12 @@ void get_shell_environ(pid_t shell_pid, char ***shell_environ_address)
   char **__environ_addresses;
   {
     struct iovec local[1];
-    local[0].iov_base = calloc(ENVIRON_AMOUNT_OF_VARIABLES, sizeof(char *));
-    local[0].iov_len = ENVIRON_AMOUNT_OF_VARIABLES;
+    local[0].iov_base = calloc(8*ENVIRON_AMOUNT_OF_VARIABLES, 1);
+    local[0].iov_len = 8*ENVIRON_AMOUNT_OF_VARIABLES;
 
     struct iovec remote[1];
     remote[0].iov_base = *environ_pointer;
-    remote[0].iov_len = ENVIRON_AMOUNT_OF_VARIABLES;
+    remote[0].iov_len = 8*ENVIRON_AMOUNT_OF_VARIABLES;
 
     __environ_addresses = local[0].iov_base;
 
