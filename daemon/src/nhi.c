@@ -110,9 +110,9 @@ char ***get_shell_environ_address(pid_t shell_pid, int signum)
   {
     char command[128];
     if (signum == SIGUSR1) {
-      strcpy(command, "objdump -tT $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
+      strcpy(command, "objdump -T $(which bash) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
     } else if (signum == SIGUSR2) {
-      strcpy(command, "objdump -tT $(which zsh) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
+      strcpy(command, "objdump -T $(which zsh) | awk -v sym=environ ' $NF == sym && $4 == \".bss\"  { print $1; exit }'");
     }
     FILE *process = popen(command, "r");
     if (!process) {
