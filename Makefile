@@ -10,7 +10,19 @@ build-daemon:
 build-cli:
 	go build -o nhi main.go
 
-create-db:
+install: install-nhid install-nhi install-db
+
+install-nhid:
+	mkdir -p /etc/nhi
+	cp nhi.bpf.o /etc/nhi
+	chmod 755 nhid
+	cp nhid /usr/bin
+
+install-nhi:
+	chmod 755 nhi
+	cp nhi /usr/bin
+
+install-db:
 	mkdir -p /var/nhi
 	chmod 777 /var/nhi
 	touch /var/nhi/db
