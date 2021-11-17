@@ -10,7 +10,7 @@ build-daemon:
 build-cli:
 	go build -o nhi main.go
 
-install: install-nhid install-nhi install-db
+install: install-nhid install-nhi install-db install-service
 
 install-nhid:
 	mkdir -p /etc/nhi
@@ -28,6 +28,9 @@ install-db:
 	touch /var/nhi/db
 	chmod 777 /var/nhi/db
 	sqlite3 /var/nhi/db "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
+
+install-service:
+	cp nhid.service /etc/systemd/system
 
 build-test-daemon:
 	clang -Wall -g -O2 -target bpf -D__TARGET_ARCH_x86 -c daemon/src/nhi.bpf.c -o nhi.bpf.o
