@@ -41,7 +41,7 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 - Ubuntu 20.10+
 - Fedora 32+
 
-`xterm` based terminals are highly recommended. (If you don't know whether your terminal emulator is `xterm` based or not, it most likely is` xterm` based. `xterm` is standard for terminal emulators.)
+`xterm` based terminals are highly recommended. (If you don't know whether your terminal emulator is `xterm` based or not, it most likely is `xterm` based. `xterm` is a standard for terminal emulators.)
 
 ## Installation
 **Step 1**: Install `objdump`, `awk`, `sqlite3`, `libsqlite3-dev` and `libbpf-dev` (example for linux debian/ubuntu systems):
