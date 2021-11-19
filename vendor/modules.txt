@@ -1,0 +1,12 @@
+# github.com/alecthomas/kong v0.2.15
+## explicit
+github.com/alecthomas/kong
+# github.com/mattn/go-sqlite3 v1.14.6
+## explicit
+github.com/mattn/go-sqlite3
+# github.com/pkg/errors v0.8.1
+github.com/pkg/errors
+# golang.org/x/sys v0.0.0-20210223212115-eede4237b368
+## explicit
+golang.org/x/sys/internal/unsafeheader
+golang.org/x/sys/unix
