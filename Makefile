@@ -41,7 +41,6 @@ install-db:
 install-service:
 	mkdir -p $(DESTDIR)/etc/systemd/system
 	cp nhid.service $(DESTDIR)/etc/systemd/system
-	systemctl enable nhid || true
 
 build-test-daemon:
 	clang -Wall -g -O2 -target bpf -D__TARGET_ARCH_x86 -c daemon/src/nhi.bpf.c -o nhi.bpf.o
