@@ -12,7 +12,7 @@ build-daemon:
 build-cli:
 	GOCACHE=/tmp/gocache bash -c 'go build -o nhi main.go'
 
-install: install-nhid install-nhi install-db install-service
+install: install-nhid install-shells install-nhi install-db install-service
 
 install-nhid:
 	mkdir -p $(DESTDIR)/etc/nhi
@@ -20,6 +20,11 @@ install-nhid:
 	chmod 755 nhid
 	mkdir -p $(DESTDIR)/usr/bin
 	cp nhid $(DESTDIR)/usr/bin
+
+install-shells:
+	mkdir -p $(DESTDIR)/etc/nhi
+	cp shell/nhi.bash $(DESTDIR)/etc/nhi
+	cp shell/nhi.zsh $(DESTDIR)/etc/nhi
 
 install-nhi:
 	chmod 755 nhi
