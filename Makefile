@@ -1,3 +1,5 @@
+DESTDIR =
+
 build: build-daemon build-cli
 
 build-daemon:
@@ -8,29 +10,33 @@ build-daemon:
 	clang -Wall nhi.o utils.o sqlite.o -lbpf -lelf -lz -lsqlite3 -o nhid
 
 build-cli:
-	go build -o nhi main.go
+	GOCACHE=/tmp/gocache bash -c 'go build -o nhi main.go'
 
 install: install-nhid install-nhi install-db install-service
 
 install-nhid:
-	mkdir -p /etc/nhi
-	cp nhi.bpf.o /etc/nhi
+	mkdir -p $(DESTDIR)/etc/nhi
+	cp nhi.bpf.o $(DESTDIR)/etc/nhi
 	chmod 755 nhid
-	cp nhid /usr/bin
+	mkdir -p $(DESTDIR)/usr/bin
+	cp nhid $(DESTDIR)/usr/bin
 
 install-nhi:
 	chmod 755 nhi
-	cp nhi /usr/bin
+	mkdir -p $(DESTDIR)/usr/bin
+	cp nhi $(DESTDIR)/usr/bin
 
 install-db:
-	mkdir -p /var/nhi
-	chmod 777 /var/nhi
-	touch /var/nhi/db
-	chmod 777 /var/nhi/db
-	sqlite3 /var/nhi/db "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
+	mkdir -p $(DESTDIR)/var/nhi
+	chmod 777 $(DESTDIR)/var/nhi
+	touch $(DESTDIR)/var/nhi/db
+	chmod 777 $(DESTDIR)/var/nhi/db
+	sqlite3 $(DESTDIR)/var/nhi/db "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS meta (indicator INTEGER, name TEXT, start_time INTEGER, finish_time INTEGER);"
 
 install-service:
-	cp nhid.service /etc/systemd/system
+	mkdir -p $(DESTDIR)/etc/systemd/system
+	cp nhid.service $(DESTDIR)/etc/systemd/system
+	systemctl enable nhid || true
 
 build-test-daemon:
 	clang -Wall -g -O2 -target bpf -D__TARGET_ARCH_x86 -c daemon/src/nhi.bpf.c -o nhi.bpf.o
