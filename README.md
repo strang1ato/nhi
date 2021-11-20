@@ -44,7 +44,40 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 `xterm` based terminals are highly recommended. (If you don't know whether your terminal emulator is `xterm` based or not, it most likely is `xterm` based. `xterm` is a standard for terminal emulators.)
 
 ## Installation
-**Step 1**: Install `objdump`, `awk`, `sqlite3`, `libsqlite3-dev` and `libbpf-dev` (example for linux debian/ubuntu systems):
+
+### Ubuntu
+**Step 1**:
+Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data required by `nhi`. To install shells that are compiled "normally", like on every other distro run:
+
+    sudo apt-get remove zsh-common
+    sudo add-apt-repository ppa:strang1ato/default-bash-and-zsh
+    sudo apt-get update
+    sudo apt-get install --reinstall bash
+
+and if you were using `zsh`:
+
+    sudo apt-get install zsh
+
+From now `bash` and `zsh` will be upgraded/installed only from the newly added repository.
+
+**Step 2**: Run:
+
+    sudo add-apt-repository ppa:strang1ato/nhi
+    sudo apt-get update
+    sudo apt-get install nhi
+
+**Step 3**: Add to the end of your `.bashrc`:
+
+    source /etc/nhi/nhi.bash
+
+And if you use `zsh` add to the end of your `.zshrc`:
+
+    source /etc/nhi/nhi.zsh
+
+**Step 4**: Restart your computer.
+
+### Other distributions
+**Step 1**: Install `objdump`, `awk`, `sqlite3`, `libsqlite3-dev` and `libbpf-dev` (example for linux debian systems):
 
     sudo apt-get install binutils gawk sqlite3 libsqlite3-dev libbpf-dev
 
@@ -54,21 +87,9 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 
     sudo -E bash ./install
 
-**Extra step only for Ubuntu users**:
-Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data required by `nhi`. To install shells that are compiled "normally", like on every other distro run:
-
-    sudo apt-get remove zsh-common
-    sudo add-apt-repository ppa:strang1ato/default-bash-and-zsh
-    sudo apt-get update && sudo apt-get install --reinstall bash
-    
-and if you were using `zsh`:
-    
-    sudo apt-get install zsh
-
-From now `bash` and `zsh` will be upgraded/installed only from the newly added repository.
-
 **Step 4**: Restart your computer.
 
+### Testing
 In order to check if you installed `nhi` succesfully open new terminal window and execute for example:
 
     echo nhi test
