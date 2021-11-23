@@ -17,7 +17,7 @@ about each executed command and everything around, and delivers powerful queryin
 - shell prompt at the time of command execution
 - (and much more in the future :smile:)
 
-`nhi` also keeps record of infomation about shell session in general.
+`nhi` also keeps records of infomation about shell session in general.
 
 These features allow retrievement of commands executed in past and whole shell sessions,
 as well as every other useful information in a convenient way.
