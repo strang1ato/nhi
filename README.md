@@ -17,7 +17,7 @@ about each executed command and everything around, and delivers powerful queryin
 - shell prompt at the time of command execution
 - (and much more in the future :smile:)
 
-`nhi` also keeps record of infomations about shell session in general.
+`nhi` also keeps record of infomation about shell session in general.
 
 These features allow retrievement of commands executed in past and whole shell sessions,
 as well as every other useful information in a convenient way.
@@ -27,7 +27,7 @@ Usage of `eBPF` guarantee a great performance and low overhead of the tool, beca
 
 `nhi` **does not** affect behaviour of any program/process (and OS in general).
 
-Watch [the introduction video](https://www.youtube.com/watch?v=i7F3fJdYXSs) to see how `nhi` works in practice.
+Watch [the introductory video](https://www.youtube.com/watch?v=i7F3fJdYXSs) to see how `nhi` works in practice.
 
 ## Usage
 For the full documentation, read [the nhi(1) man page](https://htmlpreview.github.io/?https://github.com/strang1ato/nhi/blob/main/doc/nhi.1.html).
