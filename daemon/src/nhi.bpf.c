@@ -290,9 +290,9 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
 
   long indicator = 0;
   int shell_index = 0;
+  struct shell *shell;
   // find indicator of the shell
   for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
-    struct shell *shell;
     shell = bpf_map_lookup_elem(&shells, &shell_index);
     if (shell) {
       if (!shell->shell_pid) {
@@ -305,6 +305,10 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
       }
     }
     shell_index++;
+  }
+
+  if (!shell) {
+    return 0;
   }
 
   int zero = 0;
@@ -329,6 +333,22 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
 
   if (d_inode->i_gid.val != 5) {  // tty group id is 5
     return 0;
+  }
+
+  if (dentry.d_name.len != shell->terminal_len-1) {
+    return 0;
+  }
+
+  char terminal[8];
+  bpf_core_read_str(&terminal, sizeof(terminal), dentry.d_name.name);
+
+  for (int i=0; i<sizeof(terminal); i++) {
+    if (i == dentry.d_name.len) {
+      break;
+    }
+    if (terminal[i] != shell->terminal[i]) {
+      return 0;
+    }
   }
 
   char specificity;
@@ -385,7 +405,6 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     }
   }
 
-  struct shell *shell;
   shell = bpf_map_lookup_elem(&shells, &shell_index);
   if (shell && shell->omit_write == 1) {
     return 0;

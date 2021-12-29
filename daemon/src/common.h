@@ -36,6 +36,8 @@ struct shell {
   long indicator;
   char omit_write;
   char ***environ_address;
+  char terminal[8];
+  char terminal_len;
 };
 
 struct child {

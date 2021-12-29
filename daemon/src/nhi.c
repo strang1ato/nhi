@@ -92,6 +92,26 @@ void handle_kill_SIGUSR(struct kill_event *kill_event)
 
   get_shell_environ(kill_event->shell_pid, helper.environ_address);
 
+  {
+    char command[128];
+    sprintf(command, "ps -p %d -o tty= | awk -F'/' '{ print $NF }'", helper.shell_pid);
+
+    FILE *process = popen(command, "r");
+    if (!process) {
+      write_log("popen at handle_kill_SIGUSR failed");
+      return;
+    }
+
+    if (!fgets(helper.terminal, sizeof(helper.terminal), process)) {
+      write_log("fgets at handle_kill_SIGUSR failed");
+      return;
+    }
+
+    pclose(process);
+
+    helper.terminal_len = (char)strlen(helper.terminal);
+  }
+
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
 
