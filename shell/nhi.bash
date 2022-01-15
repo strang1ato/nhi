@@ -24,7 +24,7 @@ function prompter() {
   ran_first_time="true"
   command_ran=0
 }
-declare PROMPT_COMMAND="prompter"
+declare PROMPT_COMMAND=${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}"prompter"
 
 function echo() {
   /bin/echo "$@"
