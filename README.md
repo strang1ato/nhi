@@ -20,7 +20,7 @@ about each executed command and everything around, and delivers powerful queryin
 `nhi` also keeps records of information about shell session in general.
 
 These features allow retrievement of commands executed in past and whole shell sessions,
-as well as every other useful information in a convenient way.
+as well as all other useful information in a convenient way.
 
 `nhi` daemon is based on [eBPF](https://ebpf.io/) - a technology built into `linux kernel`.
 Usage of `eBPF` guarantee a great performance and low overhead of the tool, because tracing is being **safely** done inside `kernel`.
@@ -45,7 +45,7 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 
 ## Installation
 
-### Ubuntu 21.10+
+### Ubuntu 21.10 (Support for Ubuntu 22.04 will be added soon)
 **Step 1**:
 Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data required by `nhi`. To install shells that are compiled "normally", like on every other distro run:
 
