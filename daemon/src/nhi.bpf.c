@@ -335,7 +335,7 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     return 0;
   }
 
-  if (dentry.d_name.len != shell->terminal_len-1) {
+  if (dentry.d_name.len != shell->terminal_len) {
     return 0;
   }
 

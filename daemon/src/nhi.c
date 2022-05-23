@@ -109,7 +109,7 @@ void handle_kill_SIGUSR(struct kill_event *kill_event)
 
     pclose(process);
 
-    helper.terminal_len = (char)strlen(helper.terminal);
+    helper.terminal_len = (char)strlen(helper.terminal)-1;
   }
 
   add_PS1(db, indicator, getenv("NHI_PS1"));
