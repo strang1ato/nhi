@@ -45,7 +45,7 @@ Some major distributions that ship with the `linux kernel` 5.5+:
 
 ## Installation
 
-### Ubuntu 21.10 (Support for Ubuntu 22.04 will be added soon)
+### Ubuntu 21.10+
 **Step 1**:
 Ubuntu has oddly compiled `bash` and `zsh` binaries which are missing some data required by `nhi`. To install shells that are compiled "normally", like on every other distro run:
 
