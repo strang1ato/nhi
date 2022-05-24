@@ -335,20 +335,22 @@ int BPF_PROG(ksys_write, int fd, char *buf, size_t count)
     return 0;
   }
 
-  if (dentry.d_name.len != shell->terminal_len) {
-    return 0;
-  }
-
   char terminal[8];
   bpf_core_read_str(&terminal, sizeof(terminal), dentry.d_name.name);
 
-  for (int i=0; i<sizeof(terminal); i++) {
-    if (i == dentry.d_name.len) {
-      break;
+  if (dentry.d_name.len == 3 && terminal[0] == 't' && terminal[1] == 't' && terminal[2] == 'y') {
+    ;
+  } else if (dentry.d_name.len == shell->terminal_len) {
+    for (int i=0; i<sizeof(terminal); i++) {
+      if (dentry.d_name.len > 0 && i == dentry.d_name.len) {
+        break;
+      }
+      if (terminal[i] != shell->terminal[i]) {
+        return 0;
+      }
     }
-    if (terminal[i] != shell->terminal[i]) {
-      return 0;
-    }
+  } else {
+    return 0;
   }
 
   char specificity;
