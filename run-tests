@@ -5,7 +5,7 @@ set -e
 ./testing/test-cli
 
 sudo valgrind ./nhid 2> ./nhid.log &
-nhid_pid="$!"
+nhid_ppid="$!"
 
 sleep 5
 
@@ -16,7 +16,7 @@ echo source $PWD/shell/nhi.bash >> ~/.bashrc
 
 head -n -2 ~/.bashrc | tee ~/.bashrc
 
-sudo pkill -2 -P "$nhid_pid"
+sudo pkill -2 -P "$nhid_ppid"
 
 sleep 1
 leaked_bytes="$(cat ./nhid.log | awk '$2 == "definitely" && $3 == "lost:"  { print $4; exit }')"
