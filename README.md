@@ -35,11 +35,11 @@ For the full documentation, read [the nhi(1) man page](https://htmlpreview.githu
 For quick reference, use `nhi` `--help` flags.
 
 ## Requirements
-`bash` or `zsh`, `x86_64` architecture, `systemd` and `linux kernel` 5.5+.
-Some major distributions that ship with the `linux kernel` 5.5+:
+`bash` or `zsh`, `x86_64` architecture, `systemd` and `linux kernel` 5.8+.
+Some major distributions that ship with the `linux kernel` 5.8+:
 - Debian 11
 - Ubuntu 20.10+
-- Fedora 32+
+- Fedora 33+
 
 `xterm` based terminals are highly recommended. (If you don't know whether your terminal emulator is `xterm` based or not, it most likely is `xterm` based. `xterm` is a standard for terminal emulators.)
 
