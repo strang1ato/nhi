@@ -9,12 +9,11 @@ nhid_ppid="$!"
 
 sleep 5
 
-echo export PS1=\"my_prompt \" >> ~/.bashrc
-echo source $PWD/shell/nhi.bash >> ~/.bashrc
+echo export PS1=\"my_prompt \" \&\& source $PWD/shell/nhi.bash >> ~/.bashrc
 
 ./testing/expect-test || true
 
-head -n -2 ~/.bashrc | tee ~/.bashrc
+sed -i '$ d' ~/.bashrc
 
 sudo pkill -2 -P "$nhid_ppid"
 
