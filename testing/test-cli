@@ -24,8 +24,8 @@ diff_result="$(diff ./testing/expected_output/fetch <(./nhi fetch session1 -f))"
 if [[ "$diff_result" != "" ]]; then
   echo The output of fetch is not expected, rename failed! 1>&2
 
-  ./nhi rename {-2} session1
-  ./nhi rename {-1} session2
+  ./nhi rename {-2} 16340475316
+  ./nhi rename {-1} 16340475452
   exit 1
 fi
 
