@@ -23,11 +23,11 @@ jobs:
           sudo apt update
           sudo apt install golang
 
-      - name: Create test db
-        run: make create-test-db
-
       - name: Build test cli
         run: make build-test-cli
 
+      - name: Build test daemon
+        run: make build-test-daemon
+
       - name: Run tests
-        run: ./testing/test-cli
+        run: sudo ./run-tests

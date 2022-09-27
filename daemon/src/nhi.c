@@ -375,7 +375,16 @@ int main()
     return 0;
   }
 
-  bpf_object = bpf_object__open_file("/etc/nhi/nhi.bpf.o", 0);
+  char *bpf_object_path = malloc(256);
+
+#ifndef TEST
+  strcpy(bpf_object_path, "/etc/nhi/nhi.bpf.o");
+#else
+  sprintf(bpf_object_path, "%s/nhi.bpf.o", getenv("PWD"));
+#endif
+
+  bpf_object = bpf_object__open_file(bpf_object_path, 0);
+  free(bpf_object_path);
   if (libbpf_get_error(bpf_object)) {
     write_log("Failed to open bpf_object");
     return 0;

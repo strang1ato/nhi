@@ -1,0 +1,32 @@
+#!/bin/bash
+
+testing_dir="$(dirname $0)"
+
+touch $testing_dir/db
+cat $testing_dir/original_db > $testing_dir/db
+
+sudo valgrind $testing_dir/../nhid 2> $testing_dir/nhid.log &
+nhid_ppid="$!"
+
+sleep 5
+
+echo export PS1=\"my_prompt \" \&\& source $PWD/shell/nhi.bash >> ~/.bashrc
+
+$testing_dir/expect-runner || true
+
+sudo pkill -2 -P "$nhid_ppid"
+
+sed -i '$ d' ~/.bashrc
+
+sleep 1
+leaked_bytes="$(cat $testing_dir/nhid.log | awk '$2 == "definitely" && $3 == "lost:"  { print $4; exit }')"
+if [[ "$leaked_bytes" != "0" ]]; then
+  echo Memory leak with "$leaked_bytes" bytes! 1>&2
+  exit 1
+fi
+
+diff_result="$(diff $testing_dir/expected_output/fetch_after_expect-runner <($testing_dir/../nhi fetch -f {-3}) || true)"
+if [[ "$diff_result" != "" ]]; then
+  echo The output of fetch is not expected! 1>&2
+  exit 1
+fi
