@@ -18,10 +18,14 @@ jobs:
       - name: Set Warsaw timezone
         run: sudo timedatectl set-timezone Europe/Warsaw
 
+      - name: Update package db
+        run: sudo apt-get update
+
       - name: Install go
-        run: |
-          sudo apt update
-          sudo apt install golang
+        run: sudo apt-get install golang
+
+      - name: Install daemon dependencies
+        run: sudo apt-get install binutils gawk sqlite3 libsqlite3-dev libbpf-dev
 
       - name: Build test cli
         run: make build-test-cli
