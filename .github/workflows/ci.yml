@@ -27,8 +27,8 @@ jobs:
       - name: Install daemon dependencies
         run: sudo apt-get install binutils gawk sqlite3 libsqlite3-dev libbpf-dev
 
-      - name: Install expect
-        run: sudo apt-get install expect
+      - name: Install test dependencies
+        run: sudo apt-get install valgrind expect
 
       - name: Build test cli
         run: make build-test-cli
