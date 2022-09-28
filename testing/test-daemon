@@ -22,7 +22,6 @@ sleep 1
 leaked_bytes="$(cat $testing_dir/nhid.log | awk '$2 == "definitely" && $3 == "lost:"  { print $4; exit }')"
 if [[ "$leaked_bytes" != "0" ]]; then
   echo Memory leak with "$leaked_bytes" bytes! 1>&2
-  cat $testing_dir/nhid.log
   exit 1
 fi
 
