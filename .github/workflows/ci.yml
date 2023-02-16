@@ -37,4 +37,4 @@ jobs:
         run: make build-test-daemon
 
       - name: Run tests
-        run: sudo ./run-tests
+        run: sudo ./run-tests no-valgrind

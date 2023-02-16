@@ -3,4 +3,4 @@
 set -e
 
 ./testing/test-cli
-./testing/test-daemon
+./testing/test-daemon $1

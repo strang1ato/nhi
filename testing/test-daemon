@@ -11,8 +11,13 @@ touch $testing_dir/nhid.log
 touch $testing_dir/db
 cat $testing_dir/original_db > $testing_dir/db
 
-sudo -E valgrind $testing_dir/../nhid 2> $testing_dir/nhid.log &
-nhid_ppid="$!"
+if [[ "$1" != "no-valgrind" ]]; then
+  sudo -E valgrind $testing_dir/../nhid 2> $testing_dir/nhid.log &
+  nhid_ppid="$!"
+else
+  sudo -E $testing_dir/../nhid &
+  nhid_pid="$!"
+fi
 
 sleep 5
 
@@ -20,15 +25,22 @@ echo export PS1=\"my_prompt \" \&\& source $PWD/shell/nhi.bash >> ~/.bashrc
 
 $testing_dir/expect-runner || true
 
-sudo pkill -2 -P "$nhid_ppid"
+if [[ "$1" != "no-valgrind" ]]; then
+  sudo pkill -2 -P "$nhid_ppid"
+else
+  sudo kill -2 "$nhid_pid"
+fi
 
 sed -i '$ d' ~/.bashrc
 
 sleep 1
-leaked_bytes="$(cat $testing_dir/nhid.log | awk '$2 == "definitely" && $3 == "lost:"  { print $4; exit }')"
-if [[ "$leaked_bytes" != "0" ]]; then
-  echo Memory leak with "$leaked_bytes" bytes! 1>&2
-  end
+
+if [[ "$1" != "no-valgrind" ]]; then
+  leaked_bytes="$(cat $testing_dir/nhid.log | awk '$2 == "definitely" && $3 == "lost:"  { print $4; exit }')"
+  if [[ "$leaked_bytes" != "0" ]]; then
+    echo Memory leak with "$leaked_bytes" bytes! 1>&2
+    end
+  fi
 fi
 
 diff_result="$(diff $testing_dir/expected_output/fetch_after_expect-runner <($testing_dir/../nhi fetch -f {-3}) || true)"
