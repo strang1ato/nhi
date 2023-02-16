@@ -18,8 +18,14 @@ jobs:
       - name: Set Warsaw timezone
         run: sudo timedatectl set-timezone Europe/Warsaw
 
+      - name: Add not stripped bash repository
+        run: sudo add-apt-repository ppa:strang1ato/default-bash-and-zsh
+
       - name: Update package db
         run: sudo apt-get update
+
+      - name: Install not stripped bash
+        run: sudo apt-get install --reinstall bash
 
       - name: Install go
         run: sudo apt-get install golang
