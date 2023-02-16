@@ -7,6 +7,7 @@ function end() {
   exit 1
 }
 
+touch $testing_dir/nhid.log
 touch $testing_dir/db
 cat $testing_dir/original_db > $testing_dir/db
 
