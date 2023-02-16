@@ -11,7 +11,7 @@ touch $testing_dir/nhid.log
 touch $testing_dir/db
 cat $testing_dir/original_db > $testing_dir/db
 
-sudo valgrind $testing_dir/../nhid 2> $testing_dir/nhid.log &
+sudo -E valgrind $testing_dir/../nhid 2> $testing_dir/nhid.log &
 nhid_ppid="$!"
 
 sleep 5
