@@ -8,45 +8,45 @@
 
 char LICENSE[] SEC("license") = "GPL";
 
-struct bpf_map_def SEC("maps") shells = {
-  .type = BPF_MAP_TYPE_ARRAY,
-  .key_size = 4,
-  .value_size = sizeof(struct shell),
-  .max_entries = SHELLS_MAX_ENTRIES,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_ARRAY);
+  __uint(key_size, 4);
+  __uint(value_size, sizeof(struct shell));
+  __uint(max_entries, SHELLS_MAX_ENTRIES);
+} shells SEC(".maps");
 
-struct bpf_map_def SEC("maps") children = {
-  .type = BPF_MAP_TYPE_ARRAY,
-  .key_size = 4,
-  .value_size = sizeof(struct child),
-  .max_entries = CHILDREN_MAX_ENTRIES,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_ARRAY);
+  __uint(key_size, 4);
+  __uint(value_size, sizeof(struct child));
+  __uint(max_entries, CHILDREN_MAX_ENTRIES);
+} children SEC(".maps");
 
-struct bpf_map_def SEC("maps") ring_buffer = {
-  .type = BPF_MAP_TYPE_RINGBUF,
-  .max_entries = RING_BUFFER_MAX_ENTRIES,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_RINGBUF);
+  __uint(max_entries, RING_BUFFER_MAX_ENTRIES);
+} ring_buffer SEC(".maps");
 
-struct bpf_map_def SEC("maps") __fdget_pos_pos = {
-  .type = BPF_MAP_TYPE_PERCPU_ARRAY,
-  .key_size = 4,
-  .value_size = sizeof(unsigned long),
-  .max_entries = 1,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+  __uint(key_size, 4);
+  __uint(value_size, sizeof(unsigned long));
+  __uint(max_entries, 1);
+} __fdget_pos_pos SEC(".maps");
 
-struct bpf_map_def SEC("maps") ksys_write_event = {
-  .type = BPF_MAP_TYPE_PERCPU_ARRAY,
-  .key_size = 4,
-  .value_size = KSYS_WRITE_EVENT_SIZE,
-  .max_entries = 1,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+  __uint(key_size, 4);
+  __uint(value_size, KSYS_WRITE_EVENT_SIZE);
+  __uint(max_entries, 1);
+} ksys_write_event SEC(".maps");
 
-struct bpf_map_def SEC("maps") ksys_write_d_inode = {
-  .type = BPF_MAP_TYPE_PERCPU_ARRAY,
-  .key_size = 4,
-  .value_size = sizeof(struct inode),
-  .max_entries = 1,
-};
+struct {
+  __uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+  __uint(key_size, 4);
+  __uint(value_size, sizeof(struct inode));
+  __uint(max_entries, 1);
+} ksys_write_d_inode SEC(".maps");
 
 SEC("fentry/kill_something_info")
 int BPF_PROG(kill_something_info, int sig, struct kernel_siginfo *info, pid_t pid)
