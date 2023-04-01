@@ -26,19 +26,22 @@ function prompter() {
 }
 declare PROMPT_COMMAND=${PROMPT_COMMAND:+$PROMPT_COMMAND$'\n'}"prompter"
 
+function print_output_as_a_new_proc() {
+  memfile=$(mktemp -p /dev/shm/)
+  "$@" &> "$memfile"
+  cat "$memfile"
+  rm "$memfile"
+}
+
 function echo() {
   /bin/echo "$@"
 }
 function printf() {
-  if [[ "$1" == "-v" ]]; then
-    command printf $@
-  else
-    echo "$(command printf $@ 2>&1)"
-  fi
+  print_output_as_a_new_proc command printf "$@"
 }
 function pwd() {
-  echo "$(command pwd $@ 2>&1)"
+  print_output_as_a_new_proc command pwd "$@"
 }
 function help() {
-  echo "$(command help $@ 2>&1)"
+  print_output_as_a_new_proc command help "$@"
 }
