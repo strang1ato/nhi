@@ -45,3 +45,12 @@ function pwd() {
 function help() {
   print_output_as_a_new_proc command help "$@"
 }
+function history() {
+  print_output_as_a_new_proc command history "$@"
+}
+function dirs() {
+  print_output_as_a_new_proc command dirs "$@"
+}
+function jobs() {
+  print_output_as_a_new_proc command jobs "$@"
+}
