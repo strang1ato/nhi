@@ -54,3 +54,6 @@ function dirs() {
 function jobs() {
   print_output_as_a_new_proc command jobs "$@"
 }
+function type() {
+  print_output_as_a_new_proc command type "$@"
+}
