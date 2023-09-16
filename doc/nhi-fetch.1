@@ -1,4 +1,4 @@
-.TH NHI-FETCH 1 2021
+.TH NHI-FETCH 1 2023
 
 .SH NAME
 nhi-fetch - Fetch shell session, optionally with given range of command(s).
@@ -47,6 +47,7 @@ nhi slice notation is inspired by python slice notation.
 .TP
 -s, --exit-status=<exit-status>
 Only show command(s) with specified exit status.
+If `not` precedes exit status, then command(s) with exit status other than given will be shown. For example, specifying `not0` will show command(s) with different exit status than 0.
 
 .TP
 -d, --directory=<directory>
