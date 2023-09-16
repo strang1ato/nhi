@@ -1,109 +1,42 @@
-<!-- Creator     : groff version 1.22.4 -->
-<!-- CreationDate: Sun Oct 31 20:00:22 2021 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-<meta name="generator" content="groff -Thtml, see www.gnu.org">
-<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-<meta name="Content-Style" content="text/css">
-<style type="text/css">
-       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       h1      { text-align: center }
-</style>
-<title>NHI-LOG</title>
-
-</head>
-<body>
-
-<h1 align="center">NHI-LOG</h1>
-
-<a href="#NAME">NAME</a><br>
-<a href="#DESCRIPTION">DESCRIPTION</a><br>
-<a href="#SYNOPSIS">SYNOPSIS</a><br>
-<a href="#OPTIONS">OPTIONS</a><br>
-
-<hr>
-
-
-<h2>NAME
-<a name="NAME"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">nhi-log - Show
-logs of shell sessions.</p>
-
-<h2>DESCRIPTION
-<a name="DESCRIPTION"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">nhi-log shows
-logs of shell sessions using less program. Interface is
-inspired by git-log.</p>
-
-<h2>SYNOPSIS
-<a name="SYNOPSIS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">nhi log [--help
-| -h] [--exit-status | -s &lt;exit-status&gt;] [--directory
-| -d &lt;directory&gt;] [--command | -c
-&lt;command-regex&gt;] [--before | -b &lt;date-and-time&gt;]
-[--after | -a &lt;date-and-time&gt;] [-l | --long]</p>
-
-<h2>OPTIONS
-<a name="OPTIONS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">-h, --help</p>
-
-<p style="margin-left:22%;">Show context-sensitive
-help.</p>
-
-<p style="margin-left:11%;">-s,
---exit-status=&lt;exit-status&gt;</p>
-
-<p style="margin-left:22%;">Only show session(s) where
-command(s) have specified exit status.</p>
-
-<p style="margin-left:11%;">-d,
---directory=&lt;directory&gt;</p>
-
-<p style="margin-left:22%;">Only show shell session(s)
-where command(s) were executed in specified directory.</p>
-
-<p style="margin-left:11%;">-c,
---command=&lt;command-regex&gt;</p>
-
-<p style="margin-left:22%;">Only show shell session(s)
-where command(s) match given regex.</p>
-
-<p style="margin-left:11%;">-b,
---before=&lt;date-and-time&gt;</p>
-
-<p style="margin-left:22%;">Only show shell session(s)
-created before specified date and time. Date and time needs
-to be specified in the following format: &quot;%YY-%MM-%DD
-%HH:%MM:%SS&quot;.</p>
-
-<p style="margin-left:11%;">-a,
---after=&lt;date-and-time&gt;</p>
-
-<p style="margin-left:22%;">Only show shell session(s)
-created after specified date and time. Date and time needs
-to be specified in the following format: &quot;%YY-%MM-%DD
-%HH:%MM:%SS&quot;.</p>
-
-<p style="margin-left:11%;">-l, --long</p>
-
-<p style="margin-left:22%;">Show commands executed inside
-session(s) as well.</p>
-<hr>
-</body>
-</html>
+<h1>NAME</h1>
+<p>nhi-log - Show logs of shell sessions.</p>
+<h1>DESCRIPTION</h1>
+<p>nhi-log shows logs of shell sessions using less program. Interface is inspired by git-log.</p>
+<h1>SYNOPSIS</h1>
+<p>nhi log [--help | -h] [--exit-status | -s &lt;exit-status&gt;] [--directory | -d &lt;directory&gt;] [--command | -c &lt;command-regex&gt;] [--before | -b &lt;date-and-time&gt;] [--after | -a &lt;date-and-time&gt;] [-l | --long]</p>
+<h1>OPTIONS</h1>
+<dl>
+<dt>-h, --help</dt>
+<dd><p>Show context-sensitive help.</p>
+</dd>
+</dl>
+<dl>
+<dt>-s, --exit-status=&lt;exit-status&gt;</dt>
+<dd><p>Only show session(s) where command(s) have specified exit status. If `not` precedes exit status, then session(s) with command(s) exit status other than given will be shown. For example, specifying `not0` will show session(s) with command(s) with different exit status than 0.</p>
+</dd>
+</dl>
+<dl>
+<dt>-d, --directory=&lt;directory&gt;</dt>
+<dd><p>Only show shell session(s) where command(s) were executed in specified directory.</p>
+</dd>
+</dl>
+<dl>
+<dt>-c, --command=&lt;command-regex&gt;</dt>
+<dd><p>Only show shell session(s) where command(s) match given regex.</p>
+</dd>
+</dl>
+<dl>
+<dt>-b, --before=&lt;date-and-time&gt;</dt>
+<dd><p>Only show shell session(s) created before specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".</p>
+</dd>
+</dl>
+<dl>
+<dt>-a, --after=&lt;date-and-time&gt;</dt>
+<dd><p>Only show shell session(s) created after specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".</p>
+</dd>
+</dl>
+<dl>
+<dt>-l, --long</dt>
+<dd><p>Show commands executed inside session(s) as well.</p>
+</dd>
+</dl>

@@ -1,140 +1,66 @@
-<!-- Creator     : groff version 1.22.4 -->
-<!-- CreationDate: Sun Oct 31 20:00:03 2021 -->
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-"http://www.w3.org/TR/html4/loose.dtd">
-<html>
-<head>
-<meta name="generator" content="groff -Thtml, see www.gnu.org">
-<meta http-equiv="Content-Type" content="text/html; charset=US-ASCII">
-<meta name="Content-Style" content="text/css">
-<style type="text/css">
-       p       { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       pre     { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       table   { margin-top: 0; margin-bottom: 0; vertical-align: top }
-       h1      { text-align: center }
-</style>
-<title>NHI-FETCH</title>
-
-</head>
-<body>
-
-<h1 align="center">NHI-FETCH</h1>
-
-<a href="#NAME">NAME</a><br>
-<a href="#SYNOPSIS">SYNOPSIS</a><br>
-<a href="#OPTIONS">OPTIONS</a><br>
-
-<hr>
-
-
-<h2>NAME
-<a name="NAME"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">nhi-fetch -
-Fetch shell session, optionally with given range of
-command(s).</p>
-
-<h2>SYNOPSIS
-<a name="SYNOPSIS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">nhi fetch
-[--help | -h] &lt;session&gt; [&lt;start:end&gt;]
-[--exit-status | -s &lt;exit-status&gt;] [--directory | -d
-&lt;directory&gt;] [--command | -c &lt;command-regex&gt;]
-[--before | -b &lt;date-and-time&gt;] [--after | -a
-&lt;date-and-time&gt;] [--fetch-child-shells | -f]
-[--stderr-in-red | -r]</p>
-
-<h2>OPTIONS
-<a name="OPTIONS"></a>
-</h2>
-
-
-<p style="margin-left:11%; margin-top: 1em">-h, --help</p>
-
-<p style="margin-left:22%;">Show context-sensitive
-help.</p>
-
-<p style="margin-left:11%;">&lt;session&gt;</p>
-
-<p style="margin-left:22%;">You can specify session by its:
-<br>
-- index, sessions are arranged from oldest to the most
-recently started. Indexing starts from 0, not from 1. <br>
-- negative index, the index value of -1 gives the most
-recently started session, -2 gives the second most recent
-session, etc. <br>
+<h1>NAME</h1>
+<p>nhi-fetch - Fetch shell session, optionally with given range of command(s).</p>
+<h1>SYNOPSIS</h1>
+<p>nhi fetch [--help | -h] &lt;session&gt; [&lt;start:end&gt;] [--exit-status | -s &lt;exit-status&gt;] [--directory | -d &lt;directory&gt;] [--command | -c &lt;command-regex&gt;] [--before | -b &lt;date-and-time&gt;] [--after | -a &lt;date-and-time&gt;] [--fetch-child-shells | -f] [--stderr-in-red | -r]</p>
+<h1>OPTIONS</h1>
+<dl>
+<dt>-h, --help</dt>
+<dd><p>Show context-sensitive help.</p>
+</dd>
+</dl>
+<dl>
+<dt>&lt;session&gt;</dt>
+<dd><p>You can specify session by its:</p>
+<p>- index, sessions are arranged from oldest to the most recently started. Indexing starts from 0, not from 1.<br />
+- negative index, the index value of -1 gives the most recently started session, -2 gives the second most recent session, etc.<br />
 - name.</p>
-
-<p style="margin-left:22%; margin-top: 1em">Indicator needs
-to be specified inside curly brackets.</p>
-
-<p style="margin-left:11%;">[&lt;start:end&gt;]</p>
-
-<p style="margin-left:22%;">If you want to fetch only a
-part of shell session you can easily specify which commands
-you would like to fetch. <br>
-To achieve that use slice notation: {X:Y}. Slice notation
-needs to be specified in curly brackets. <br>
-X is start range, Y is end range, you can replace X and Y
-with: <br>
-- index, commands are arranged from oldest to the most
-recently started. Indexing starts from 0, not from 1. <br>
-- negative index. <br>
-- indicator, you can discover command indicator that you are
-interested in by using <a href="nhi-log-session.1.html">nhi-log-session(1)</a>. <br>
-You can also keep X or Y empty, in order to not set a
-border.</p>
-
-<p style="margin-left:22%; margin-top: 1em">nhi slice
-notation is inspired by python slice notation.</p>
-
-<p style="margin-left:11%;">-s,
---exit-status=&lt;exit-status&gt;</p>
-
-<p style="margin-left:22%;">Only show command(s) with
-specified exit status.</p>
-
-<p style="margin-left:11%;">-d,
---directory=&lt;directory&gt;</p>
-
-<p style="margin-left:22%;">Only show command(s) executed
-in specified directory.</p>
-
-<p style="margin-left:11%;">-c,
---command=&lt;command-regex&gt;</p>
-
-<p style="margin-left:22%;">Only show command(s) that match
-given regex.</p>
-
-<p style="margin-left:11%;">-b,
---before=&lt;date-and-time&gt;</p>
-
-<p style="margin-left:22%;">Only show command(s) executed
-before specified date and time. Date and time needs to be
-specified in the following format: &quot;%YY-%MM-%DD
-%HH:%MM:%SS&quot;.</p>
-
-<p style="margin-left:11%;">-a,
---after=&lt;date-and-time&gt;</p>
-
-<p style="margin-left:22%;">Only show command(s) executed
-after specified date and time. Date and time needs to be
-specified in the following format: &quot;%YY-%MM-%DD
-%HH:%MM:%SS&quot;.</p>
-
-<p style="margin-left:11%;">-f, --fetch-child-shells</p>
-
-<p style="margin-left:22%;">Fetch content of shells
-executed within the session.</p>
-
-<p style="margin-left:11%;">-r, --stderr-in-red</p>
-
-<p style="margin-left:22%;">Show error(s) in red color.</p>
-<hr>
-</body>
-</html>
+<p>Indicator needs to be specified inside curly brackets.</p>
+</dd>
+</dl>
+<dl>
+<dt>[&lt;start:end&gt;]</dt>
+<dd><p>If you want to fetch only a part of shell session you can easily specify which commands you would like to fetch.</p>
+<p>To achieve that use slice notation: {X:Y}. Slice notation needs to be specified in curly brackets.<br />
+X is start range, Y is end range, you can replace X and Y with:<br />
+- index, commands are arranged from oldest to the most recently started. Indexing starts from 0, not from 1.<br />
+- negative index.<br />
+- indicator, you can discover command indicator that you are interested in by using nhi-log-session(1).<br />
+You can also keep X or Y empty, in order to not set a border.</p>
+<p>nhi slice notation is inspired by python slice notation.</p>
+</dd>
+</dl>
+<dl>
+<dt>-s, --exit-status=&lt;exit-status&gt;</dt>
+<dd><p>Only show command(s) with specified exit status. If `not` precedes exit status, then command(s) with exit status other than given will be shown. For example, specifying `not0` will show command(s) with different exit status than 0.</p>
+</dd>
+</dl>
+<dl>
+<dt>-d, --directory=&lt;directory&gt;</dt>
+<dd><p>Only show command(s) executed in specified directory.</p>
+</dd>
+</dl>
+<dl>
+<dt>-c, --command=&lt;command-regex&gt;</dt>
+<dd><p>Only show command(s) that match given regex.</p>
+</dd>
+</dl>
+<dl>
+<dt>-b, --before=&lt;date-and-time&gt;</dt>
+<dd><p>Only show command(s) executed before specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".</p>
+</dd>
+</dl>
+<dl>
+<dt>-a, --after=&lt;date-and-time&gt;</dt>
+<dd><p>Only show command(s) executed after specified date and time. Date and time needs to be specified in the following format: "%YY-%MM-%DD %HH:%MM:%SS".</p>
+</dd>
+</dl>
+<dl>
+<dt>-f, --fetch-child-shells</dt>
+<dd><p>Fetch content of shells executed within the session.</p>
+</dd>
+</dl>
+<dl>
+<dt>-r, --stderr-in-red</dt>
+<dd><p>Show error(s) in red color.</p>
+</dd>
+</dl>
