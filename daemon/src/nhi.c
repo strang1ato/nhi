@@ -72,7 +72,7 @@ void handle_kill_SIGUSR(struct kill_event *kill_event)
   meta_create_row(db, indicator);
 
   int i = 0;
-  for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+  while (i<SHELLS_MAX_ENTRIES) {
     struct shell shell;
     bpf_map_lookup_elem(shells_fd, &i, &shell);
     if (!shell.shell_pid) {
@@ -288,8 +288,7 @@ void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
   long indicator = 0;
   char ***environ_address = 0;
   {
-    int i = 0;
-    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+    for (int i = 0; i<SHELLS_MAX_ENTRIES; i++) {
       struct shell shell;
       bpf_map_lookup_elem(shells_fd, &i, &shell);
       if (shell.shell_pid == kill_event->shell_pid) {
@@ -297,7 +296,6 @@ void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
         environ_address = shell.environ_address;
         break;
       }
-      i++;
     }
   }
   get_shell_environ(kill_event->shell_pid, environ_address);
@@ -324,15 +322,13 @@ void handle_child_creation(pid_t *shell_pid)
   // find indicator of the shell
   long indicator = 0;
   {
-    int i = 0;
-    for (int j = 0; j<SHELLS_MAX_ENTRIES; j++) {
+    for (int i = 0; i<SHELLS_MAX_ENTRIES; i++) {
       struct shell shell;
       bpf_map_lookup_elem(shells_fd, &i, &shell);
       if (shell.shell_pid == *shell_pid) {
         indicator = shell.indicator;
         break;
       }
-      i++;
     }
   }
 
