@@ -61,7 +61,7 @@ func LogSession(db *sql.DB, session, exitStatus, directory, commandRegex, before
 func getWhere(exitStatus, directory, before, after string) (string, error) {
 	var where string
 	if exitStatus != "" {
-		if (len(exitStatus) >= 3 && exitStatus[:3] == "not") {
+		if len(exitStatus) >= 3 && exitStatus[:3] == "not" {
 			where = fmt.Sprintf("exit_status != '%s'", exitStatus[3:])
 		} else {
 			where = fmt.Sprintf("exit_status = '%s'", exitStatus)

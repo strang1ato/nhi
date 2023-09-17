@@ -86,7 +86,7 @@ func getWhere(sliceStartEndRange []string, startRangeInt, endRangeInt, billion i
 	}
 
 	if exitStatus != "" {
-		if (len(exitStatus) >= 3 && exitStatus[:3] == "not") {
+		if len(exitStatus) >= 3 && exitStatus[:3] == "not" {
 			where = fmt.Sprintf("exit_status != '%s'", exitStatus[3:])
 		} else {
 			where = fmt.Sprintf("exit_status = '%s'", exitStatus)
