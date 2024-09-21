@@ -115,7 +115,7 @@ void handle_kill_SIGUSR(struct kill_event *kill_event)
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
 
-  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+  if (sqlite3_wal_checkpoint_v2(db, 0, SQLITE_CHECKPOINT_TRUNCATE, 0, 0) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 
@@ -310,7 +310,7 @@ void handle_kill_SIGRTMIN(struct kill_event *kill_event, size_t data_sz)
   add_PS1(db, indicator, getenv("NHI_PS1"));
   add_pwd(db, indicator, getenv("PWD"));
 
-  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+  if (sqlite3_wal_checkpoint_v2(db, 0, SQLITE_CHECKPOINT_TRUNCATE, 0, 0) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 
@@ -339,7 +339,7 @@ void handle_shell_exit(struct exit_shell_indicator_event *exit_shell_indicator_e
 {
   meta_add_finish_time(db, exit_shell_indicator_event->indicator);
 
-  if (sqlite3_wal_checkpoint(db, 0) != SQLITE_OK) {
+  if (sqlite3_wal_checkpoint_v2(db, 0, SQLITE_CHECKPOINT_TRUNCATE, 0, 0) != SQLITE_OK) {
     write_log(sqlite3_errmsg(db));
   }
 }
